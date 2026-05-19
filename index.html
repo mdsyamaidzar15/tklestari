@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Tabungan TK PKK Lestari</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    .hidden-view { display: none !important; }
+    .loader { border-top-color: #3498db; animation: spinner 1.5s linear infinite; }
+    @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans text-gray-800">
+
+  <!-- ==================== TOAST & SPINNER ==================== -->
+  <div id="toast" class="fixed top-5 right-5 z-50 transform transition-transform duration-300 translate-x-full bg-white shadow-lg rounded-lg border-l-4 border-blue-500 p-4 mb-4 hidden">
+    <div class="flex items-center">
+      <div id="toast-icon" class="text-blue-500 mr-3 text-xl"><i class="fas fa-info-circle"></i></div>
+      <div id="toast-message" class="text-gray-700 font-medium">Notifikasi</div>
+    </div>
+  </div>
+
+  <div id="loading-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden flex justify-center items-center">
+    <div class="bg-white p-5 rounded-lg flex flex-col items-center shadow-xl">
+      <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
+      <h2 class="text-center text-gray-700 text-xl font-semibold">Memproses...</h2>
+    </div>
+  </div>
+
+  <!-- ==================== VIEW: LOGIN ==================== -->
+  <div id="view-login" class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+      <div class="text-center">
+        <img class="mx-auto h-28 w-28 rounded-full border-4 border-blue-100 shadow-md object-cover" 
+             src="https://drive.google.com/thumbnail?id=1ZBNb7ReY1rMrmYjvyFKl7CozkdL6wkl0" 
+             alt="Logo TK PKK Lestari">
+        <h2 class="mt-4 text-3xl font-extrabold text-gray-900">Tabungan Siswa</h2>
+        <p class="mt-2 text-sm text-gray-600">TK PKK Lestari</p>
+      </div>
+      <form class="mt-8 space-y-6" id="loginForm" onsubmit="handleLogin(event)">
+        <div class="rounded-md shadow-sm -space-y-px">
+          <div><input id="username" type="text" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="Username"></div>
+          <div><input id="password" type="password" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="Password"></div>
+        </div>
+        <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-md transition duration-150">
+          Masuk Sistem
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== VIEW: DASHBOARD ==================== -->
+  <div id="view-dashboard" class="hidden-view min-h-screen flex flex-col">
+    <!-- Navbar -->
+    <nav class="bg-blue-600 shadow-lg">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <span class="font-bold text-white text-lg tracking-wide">Dashboard TK PKK Lestari</span>
+          </div>
+          <div class="flex items-center">
+            <div class="mr-4 text-white text-right hidden sm:block">
+              <div id="user-display-name" class="font-semibold text-sm">Nama</div>
+              <div id="user-display-role" class="text-xs text-blue-200">Role</div>
+            </div>
+            <button onclick="handleLogout()" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded text-white text-sm font-medium shadow transition">Keluar</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+      <div id="menu-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"></div>
+
+      <!-- PANEL GURU: Input Tabungan -->
+      <div id="panel-guru-input" class="hidden-view bg-white p-6 rounded-xl shadow-md border border-gray-100">
+        <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2"><i class="fas fa-piggy-bank text-blue-500 mr-2"></i>Input Tabungan Siswa</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Siswa</label>
+            <select id="select-siswa" onchange="updateSaldoHint()" class="w-full border border-gray-300 rounded-md p-2.5"></select>
+            <p id="saldo-hint" class="mt-2 text-sm font-semibold text-green-600 hidden">Saldo saat ini: Rp 0</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Transaksi</label>
+            <select id="jenis-trx" class="w-full border border-gray-300 rounded-md p-2.5">
+              <option value="Nabung">Menabung (Masuk)</option>
+              <option value="Tarik">Penarikan (Keluar)</option>
+            </select>
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nominal (Rp)</label>
+            <input type="number" id="nominal-trx" class="w-full border border-gray-300 rounded-md p-2.5" placeholder="Contoh: 5000">
+          </div>
+        </div>
+        <button onclick="submitTransaksi()" class="w-full mt-6 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg shadow">Simpan Transaksi</button>
+      </div>
+
+      <!-- PANEL GURU: Setor Kas -->
+      <div id="panel-guru-setor" class="hidden-view">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+            <h3 class="text-lg font-medium opacity-90"><i class="fas fa-wallet mr-2"></i>Uang Fisik / Kas Anda</h3>
+            <p id="kas-tangan-guru" class="text-4xl font-bold mt-2">Rp 0</p>
+          </div>
+          <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+            <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Ajukan Setoran ke Kepsek</h3>
+            <input type="number" id="nominal-setor" class="w-full border border-gray-300 rounded-md p-2.5 mb-4" placeholder="Masukkan jumlah setoran">
+            <button onclick="submitSetoran()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg shadow">Kirim Setoran</button>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden mt-6">
+          <div class="px-6 py-4 border-b bg-gray-50 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-gray-800">Rekap Saldo Kelas Anda</h3>
+            <button onclick="loadRekapGuru()" class="text-blue-500 hover:text-blue-700 text-sm">Refresh</button>
+          </div>
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-blue-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">NISN</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Nama Siswa</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">Saldo</th></tr></thead>
+            <tbody id="table-rekap-guru" class="bg-white divide-y divide-gray-200"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PANEL KEPSEK / ADMIN: Rekapitulasi -->
+      <div id="panel-rekap" class="hidden-view">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500">
+            <h3 class="text-gray-500 text-sm font-medium uppercase">Total Tabungan Sekolah</h3>
+            <p id="rekap-total" class="text-3xl font-extrabold text-gray-800 mt-1">Rp 0</p>
+          </div>
+          <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500">
+            <h3 class="text-gray-500 text-sm font-medium uppercase">Kas Per Kelas</h3>
+            <div id="rekap-kelas-list" class="mt-2 space-y-1 text-sm font-medium text-gray-700"></div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+          <div class="px-6 py-4 border-b bg-gray-50 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-gray-800">Daftar Saldo Siswa</h3>
+            <button onclick="loadRekapitulasi()" class="text-blue-500 hover:text-blue-700 text-sm">Refresh</button>
+          </div>
+          <div class="overflow-x-auto h-96">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50 sticky top-0"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kelas</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">NISN</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Saldo</th></tr></thead>
+              <tbody id="table-rekap-siswa" class="bg-white divide-y divide-gray-200"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL KEPSEK: Verifikasi Setoran -->
+      <div id="panel-verifikasi" class="hidden-view">
+        <div class="bg-white rounded-xl shadow-md border border-orange-200 overflow-hidden mb-6">
+          <div class="px-6 py-4 border-b bg-orange-50"><h3 class="text-lg font-bold text-orange-800">Kas Belum Disetor Guru</h3></div>
+          <div class="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" id="grid-kas-guru"></div>
+        </div>
+        <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+          <div class="px-6 py-4 border-b bg-gray-50 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-gray-800">Persetujuan Setoran</h3>
+            <button onclick="loadVerifikasiSetoran()" class="text-blue-500 hover:text-blue-700 text-sm">Refresh</button>
+          </div>
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-blue-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Tanggal</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Guru</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Nominal</th><th class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Aksi</th></tr></thead>
+            <tbody id="table-verifikasi" class="bg-white divide-y divide-gray-200"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PANEL ADMIN: Kelola Data Siswa -->
+      <div id="panel-admin-siswa" class="hidden-view bg-white p-6 rounded-xl shadow-md border border-gray-100">
+        <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Tambah Data Siswa</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div><input type="text" id="add-nisn" placeholder="NISN" class="w-full border border-gray-300 rounded-md p-2.5"></div>
+          <div><input type="text" id="add-nama" placeholder="Nama Lengkap" class="w-full border border-gray-300 rounded-md p-2.5"></div>
+          <div><input type="text" id="add-kelas" placeholder="Kelas (Misal: TK A)" class="w-full border border-gray-300 rounded-md p-2.5"></div>
+        </div>
+        <button onclick="tambahSiswa()" class="bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg shadow">Tambah Siswa</button>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    // ==========================================
+    // ⚠️ WAJIB DIISI: MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI SINI
+    // ==========================================
+    const API_URL = "https://script.google.com/macros/s/AKfycbzRFRkax0bnnT1PilebjqaBUY3sMXtj3nyzKcc7qG6wVQabTLQRLlRiVcOI8BnhtA98rg/exec"; 
+
+    let currentUser = null;
+    let listSiswaAktif = [];
+
+    function formatRp(angka) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(angka); }
+    function showLoading(show) { document.getElementById('loading-overlay').classList.toggle('hidden', !show); }
+    function showToast(message, isSuccess = true) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-message').innerText = message;
+      toast.classList.remove('hidden', 'translate-x-full', 'border-blue-500', 'border-red-500', 'border-green-500');
+      toast.classList.add(isSuccess ? 'border-green-500' : 'border-red-500');
+      setTimeout(() => { toast.classList.add('translate-x-full'); setTimeout(() => toast.classList.add('hidden'), 300); }, 3000);
+    }
+    function switchMainView(viewId) {
+      document.getElementById('view-login').classList.add('hidden-view');
+      document.getElementById('view-dashboard').classList.add('hidden-view');
+      document.getElementById(viewId).classList.remove('hidden-view');
+    }
+    function showPanel(panelId) {
+      ['panel-guru-input', 'panel-guru-setor', 'panel-rekap', 'panel-verifikasi', 'panel-admin-siswa'].forEach(id => {
+        if(document.getElementById(id)) document.getElementById(id).classList.add('hidden-view');
+      });
+      document.getElementById(panelId).classList.remove('hidden-view');
+    }
+
+    // --- FUNGSI JEMBATAN KE API (MENGGANTIKAN google.script.run) ---
+    async function callAPI(action, payload = {}) {
+      if(!API_URL || API_URL.includes("MASUKKAN")) {
+        alert("URL API belum diatur! Buka kode index.html dan masukkan URL Web App Google Apps Script Anda.");
+        return { success: false, message: "API URL Missing" };
+      }
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          redirect: 'follow', // Wajib untuk GAS
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // text/plain menghindari error preflight CORS
+          body: JSON.stringify({ action: action, payload: payload })
+        });
+        return await response.json();
+      } catch (e) {
+        return { success: false, message: "Gagal menghubungi server database." };
+      }
+    }
+
+    // ==================== LOGIKA APLIKASI ====================
+    
+    async function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('username').value;
+      const p = document.getElementById('password').value;
+      
+      showLoading(true);
+      const res = await callAPI('login', { username: u, password: p });
+      showLoading(false);
+
+      if (res.success) {
+        currentUser = res;
+        document.getElementById('user-display-name').innerText = res.name;
+        document.getElementById('user-display-role').innerText = `${res.role} ${res.kelas ? '- ' + res.kelas : ''}`;
+        switchMainView('view-dashboard');
+        buildMenus();
+        showToast(res.message, true);
+      } else {
+        showToast(res.message, false);
+      }
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      document.getElementById('loginForm').reset();
+      switchMainView('view-login');
+    }
+
+    function buildMenus() {
+      const container = document.getElementById('menu-container');
+      container.innerHTML = '';
+      const role = currentUser.role.toLowerCase();
+
+      if (role === 'guru') {
+        container.innerHTML += `<button onclick="showPanel('panel-guru-input'); loadDataSiswaDropdown()" class="bg-white p-4 rounded-xl shadow border border-gray-200 text-left"><h4 class="font-bold">Input Tabungan</h4></button>`;
+        container.innerHTML += `<button onclick="showPanel('panel-guru-setor'); loadInfoSetoranGuru(); loadRekapGuru()" class="bg-white p-4 rounded-xl shadow border border-gray-200 text-left"><h4 class="font-bold">Setor Kas</h4></button>`;
+        showPanel('panel-guru-input');
+        loadDataSiswaDropdown();
+      } else if (role === 'kepsek' || role === 'admin') {
+        container.innerHTML += `<button onclick="showPanel('panel-rekap'); loadRekapitulasi()" class="bg-white p-4 rounded-xl shadow border border-gray-200 text-left"><h4 class="font-bold">Rekapitulasi</h4></button>`;
+        if(role === 'kepsek') container.innerHTML += `<button onclick="showPanel('panel-verifikasi'); loadVerifikasiSetoran()" class="bg-white p-4 rounded-xl shadow border border-gray-200 text-left"><h4 class="font-bold">Verifikasi Setoran</h4></button>`;
+        if(role === 'admin') container.innerHTML += `<button onclick="showPanel('panel-admin-siswa')" class="bg-white p-4 rounded-xl shadow border border-gray-200 text-left"><h4 class="font-bold">Kelola Siswa</h4></button>`;
+        showPanel('panel-rekap');
+        loadRekapitulasi();
+      }
+    }
+
+    async function loadDataSiswaDropdown() {
+      showLoading(true);
+      const res = await callAPI('getDataSiswa', { role: currentUser.role, kelas: currentUser.kelas });
+      showLoading(false);
+      const select = document.getElementById('select-siswa');
+      if (res.success) {
+        listSiswaAktif = res.data;
+        select.innerHTML = '<option value="">-- Pilih Siswa --</option>' + res.data.map(s => `<option value="${s.nisn}">${s.nama} (${s.kelas})</option>`).join('');
+      }
+    }
+
+    function updateSaldoHint() {
+      const nisn = document.getElementById('select-siswa').value;
+      const hintEl = document.getElementById('saldo-hint');
+      if(!nisn) return hintEl.classList.add('hidden');
+      const siswa = listSiswaAktif.find(s => s.nisn === nisn);
+      if(siswa) { hintEl.innerText = `Saldo saat ini: ${formatRp(siswa.saldo)}`; hintEl.classList.remove('hidden'); }
+    }
+
+    async function submitTransaksi() {
+      const nisn = document.getElementById('select-siswa').value;
+      const jenis = document.getElementById('jenis-trx').value;
+      const nominal = document.getElementById('nominal-trx').value;
+      if (!nisn || !nominal || nominal <= 0) return showToast("Lengkapi data!", false);
+
+      showLoading(true);
+      const res = await callAPI('simpanTransaksi', { nisn, jenis, nominal, pencatat: currentUser.name });
+      showLoading(false);
+      if(res.success) { showToast(res.message, true); document.getElementById('nominal-trx').value=''; loadDataSiswaDropdown(); } 
+      else showToast(res.message, false);
+    }
+
+    async function loadInfoSetoranGuru() {
+      const res = await callAPI('getInfoSetoranGuru', { guru: currentUser.name });
+      if(res.success) document.getElementById('kas-tangan-guru').innerText = formatRp(res.kasTangan);
+    }
+
+    async function loadRekapGuru() {
+      const tbody = document.getElementById('table-rekap-guru');
+      tbody.innerHTML = '<tr><td colspan="3" class="text-center p-4">Memuat...</td></tr>';
+      const res = await callAPI('getDataSiswa', { role: currentUser.role, kelas: currentUser.kelas });
+      if(res.success && res.data.length) tbody.innerHTML = res.data.map(s => `<tr><td class="p-3">${s.nisn}</td><td class="p-3">${s.nama}</td><td class="p-3 text-right font-bold">${formatRp(s.saldo)}</td></tr>`).join('');
+    }
+
+    async function submitSetoran() {
+      const nominal = document.getElementById('nominal-setor').value;
+      if (!nominal || nominal <= 0) return;
+      showLoading(true);
+      const res = await callAPI('simpanSetoran', { guru: currentUser.name, kelas: currentUser.kelas, nominal });
+      showLoading(false);
+      if(res.success) { showToast(res.message, true); loadInfoSetoranGuru(); } else showToast(res.message, false);
+    }
+
+    async function loadRekapitulasi() {
+      showLoading(true);
+      const res = await callAPI('getRekapData', { role: currentUser.role, kelas: currentUser.kelas });
+      showLoading(false);
+      if(res.success) {
+        document.getElementById('rekap-total').innerText = formatRp(res.totalSekolah);
+        document.getElementById('rekap-kelas-list').innerHTML = Object.entries(res.rekapKelas).map(([k,v]) => `<div class="flex justify-between border-b py-1"><span>${k}</span><b>${formatRp(v)}</b></div>`).join('');
+        document.getElementById('table-rekap-siswa').innerHTML = res.detailSiswa.map(s => `<tr><td class="p-3">${s.kelas}</td><td class="p-3">${s.nisn}</td><td class="p-3">${s.nama}</td><td class="p-3 text-right font-bold">${formatRp(s.saldo)}</td></tr>`).join('');
+      }
+    }
+
+    async function loadVerifikasiSetoran() {
+      showLoading(true);
+      const [resKas, resSetor] = await Promise.all([callAPI('getAllGuruKasTangan'), callAPI('getSetoranPending')]);
+      showLoading(false);
+      
+      const grid = document.getElementById('grid-kas-guru');
+      if(resKas.success && resKas.data.length) grid.innerHTML = resKas.data.map(g => `<div class="bg-white border rounded p-3 text-center"><div class="text-xs">${g.kelas}</div><div class="font-bold">${g.guru}</div><div class="text-orange-600 font-bold">${formatRp(g.kasTangan)}</div></div>`).join('');
+      
+      const tbody = document.getElementById('table-verifikasi');
+      if(resSetor.success && resSetor.data.length) {
+        tbody.innerHTML = resSetor.data.map(d => `<tr><td class="p-3">${new Date(d.tanggal).toLocaleDateString('id-ID')}</td><td class="p-3">${d.guru} (${d.kelas})</td><td class="p-3 font-bold text-green-600">${formatRp(d.nominal)}</td><td class="p-3 text-center"><button onclick="approveSetoran(${d.baris})" class="bg-green-500 text-white px-2 py-1 rounded text-xs">Terima Uang</button></td></tr>`).join('');
+      } else tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">Tidak ada setoran tertunda.</td></tr>`;
+    }
+
+    async function approveSetoran(baris) {
+      if(!confirm("Setujui setoran ini?")) return;
+      showLoading(true);
+      const res = await callAPI('terimaSetoran', { baris });
+      if(res.success) loadVerifikasiSetoran(); else showLoading(false);
+    }
+
+    async function tambahSiswa() {
+      const nisn = document.getElementById('add-nisn').value, nama = document.getElementById('add-nama').value, kelas = document.getElementById('add-kelas').value;
+      if(!nisn || !nama || !kelas) return;
+      showLoading(true);
+      const res = await callAPI('tambahSiswaBaru', { nisn, nama, kelas });
+      showLoading(false);
+      if(res.success) { showToast(res.message, true); document.getElementById('add-nisn').value=''; document.getElementById('add-nama').value=''; }
+    }
+  </script>
+</body>
+</html>
