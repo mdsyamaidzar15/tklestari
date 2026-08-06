@@ -13,11 +13,13 @@
   
   <style>
     .hidden-view { display: none !important; }
+    
     /* Custom Scrollbar for Table */
     .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
     /* Animations */
     .fade-in { animation: fadeIn 0.3s ease-in-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -33,7 +35,7 @@
       
       <div class="text-center relative z-10">
         <img class="mx-auto h-28 w-28 rounded-full border-4 border-white shadow-lg object-cover transition-transform hover:scale-105" 
-             src="https://drive.google.com/thumbnail?id=1ZBNb7ReY1rMrmYjvyFKl7CozkdL6wkl0" 
+             src="https://placehold.co/200x200/2563eb/ffffff?text=TK+PKK+Lestari" 
              alt="Logo TK PKK Lestari">
         <h2 class="mt-6 text-3xl font-extrabold text-gray-900 tracking-tight">Portal SIK-TK</h2>
         <p class="mt-2 text-xs text-blue-600 font-bold uppercase tracking-widest bg-blue-50/80 inline-block px-4 py-1.5 rounded-full border border-blue-100">TK PKK Lestari</p>
@@ -59,14 +61,14 @@
 
   <!-- ==================== VIEW: DASHBOARD ==================== -->
   <div id="view-dashboard" class="hidden-view min-h-screen flex flex-col">
-    <!-- Navbar -->
+    <!-- Navbar Modern -->
     <nav class="bg-gradient-to-r from-blue-700 to-indigo-800 shadow-lg sticky top-0 z-40 border-b border-indigo-600">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
           <div class="flex items-center gap-3">
              <img class="h-10 w-10 rounded-full border-2 border-white/50 object-cover shadow-sm" 
-                  src="https://drive.google.com/thumbnail?id=1ZBNb7ReY1rMrmYjvyFKl7CozkdL6wkl0" 
-                  alt="Logo TK">
+                 src="https://placehold.co/200x200/2563eb/ffffff?text=TK+PKK+Lestari" 
+                 alt="Logo TK">
             <span class="font-black text-white text-lg tracking-wide hidden sm:block drop-shadow-sm">SIK TK Lestari</span>
           </div>
           <div class="flex items-center gap-4">
@@ -114,22 +116,21 @@
             <div class="relative">
               <span class="absolute inset-y-0 left-0 flex items-center pl-5 font-bold text-gray-500 text-lg">Rp</span>
               <input type="number" id="nominal-trx" class="w-full pl-14 pr-4 py-4 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 bg-gray-50 text-xl font-black text-gray-800 transition-all" placeholder="5000">
-            </div>
-          </div>
-        </div>
-        <button onclick="submitTransaksi()" class="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-4 rounded-2xl shadow-lg shadow-blue-500/30 transition-all flex justify-center items-center gap-2 transform hover:-translate-y-0.5">
-          <i class="fas fa-save"></i> Simpan Transaksi Tabungan
-        </button>
-      </div>
-
       <!-- ==================== [PANEL: GURU] RIWAYAT SISWA ==================== -->
       <div id="panel-guru-riwayat" class="hidden-view fade-in bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="p-8 border-b border-gray-100 bg-gray-50/50">
           <h3 class="text-2xl font-black text-gray-800 mb-6 flex items-center">
             <div class="w-10 h-10 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center mr-3 shadow-sm"><i class="fas fa-history"></i></div> Buku Riwayat Siswa
           </h3>
-          <label class="block text-sm font-bold text-gray-700 mb-2">Cari Data Siswa</label>
-          <select id="select-siswa-riwayat" onchange="loadRiwayatSiswa()" class="w-full md:w-1/2 border border-gray-300 rounded-2xl p-3.5 focus:ring-2 focus:ring-teal-500 bg-white font-medium cursor-pointer"></select>
+          <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex-1">
+              <label class="block text-sm font-bold text-gray-700 mb-2">Cari Data Siswa</label>
+              <select id="select-siswa-riwayat" onchange="loadRiwayatSiswa()" class="w-full border border-gray-300 rounded-2xl p-3.5 focus:ring-2 focus:ring-teal-500 bg-white font-medium cursor-pointer"></select>
+            </div>
+            <div class="flex-none flex items-end">
+               <button onclick="loadRiwayatSiswa()" class="bg-teal-50 text-teal-600 hover:bg-teal-100 border border-teal-200 px-5 py-3.5 rounded-2xl font-bold transition-colors w-full md:w-auto"><i class="fas fa-sync-alt mr-2"></i>Refresh</button>
+            </div>
+          </div>
         </div>
         <div class="overflow-x-auto custom-scrollbar max-h-[500px]">
           <table class="min-w-full divide-y divide-gray-100">
@@ -139,10 +140,11 @@
                 <th class="px-8 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Jenis</th>
                 <th class="px-8 py-4 text-right text-xs font-black text-gray-500 uppercase tracking-widest">Nominal</th>
                 <th class="px-8 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Pencatat</th>
+                <th class="px-8 py-4 text-center text-xs font-black text-gray-500 uppercase tracking-widest">Aksi</th>
               </tr>
             </thead>
             <tbody id="table-riwayat-siswa" class="bg-white divide-y divide-gray-50">
-              <tr><td colspan="4" class="p-10 text-center text-gray-400 font-bold">Pilih siswa untuk melihat riwayat.</td></tr>
+              <tr><td colspan="5" class="p-10 text-center text-gray-400 font-bold">Pilih siswa untuk melihat riwayat.</td></tr>
             </tbody>
           </table>
         </div>
@@ -167,91 +169,54 @@
         </div>
       </div>
 
-      <!-- ==================== [PANEL: BENDAHARA] TERIMA PEMBAYARAN SPP & REKREASI ==================== -->
+      <!-- ==================== [PANEL: BENDAHARA] KELOLA SPP (BARU) ==================== -->
       <div id="panel-bendahara-spp" class="hidden-view fade-in bg-white p-8 rounded-3xl shadow-sm border border-gray-100 mb-8">
         <h3 class="text-2xl font-black text-gray-800 mb-6 flex items-center">
-          <div class="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mr-3 shadow-sm"><i class="fas fa-file-invoice-dollar"></i></div> Terima Pembayaran Siswa
+          <div class="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mr-3 shadow-sm"><i class="fas fa-file-invoice-dollar"></i></div> Pembayaran SPP Bulanan
         </h3>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="md:col-span-1">
             <label class="block text-sm font-bold text-gray-700 mb-2">Pilih Siswa</label>
             <select id="select-siswa-spp" class="w-full border border-gray-300 rounded-2xl p-3.5 focus:ring-2 focus:ring-orange-500 bg-gray-50 font-medium cursor-pointer"></select>
           </div>
-          <div>
+          <div class="md:col-span-1">
             <label class="block text-sm font-bold text-gray-700 mb-2">Untuk Bulan/Tahun</label>
             <input type="month" id="bulan-spp" class="w-full border border-gray-300 rounded-2xl p-3.5 focus:ring-2 focus:ring-orange-500 bg-gray-50 font-bold text-gray-800 cursor-pointer">
           </div>
-        </div>
-
-        <!-- Pemisahan Input SPP dan Rekreasi -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 bg-orange-50/50 rounded-2xl border border-orange-100">
-          <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">Bayar SPP (Rp)</label>
+          <div class="md:col-span-1">
+            <label class="block text-sm font-bold text-gray-700 mb-2">Nominal Tagihan (Sesuai Setting)</label>
             <div class="relative">
               <span class="absolute inset-y-0 left-0 flex items-center pl-4 font-bold text-gray-500">Rp</span>
-              <input type="number" id="nominal-spp" class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 bg-white font-bold text-lg text-gray-800" placeholder="0">
+              <input type="number" id="nominal-spp" class="w-full pl-11 pr-4 py-3.5 border border-gray-300 rounded-2xl bg-gray-100 font-bold text-lg text-gray-500 cursor-not-allowed" readonly title="Ubah di menu Pengaturan">
             </div>
-            <p class="text-xs text-gray-500 mt-1">*Bisa diubah jika hanya bayar sebagian.</p>
-          </div>
-          <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">Bayar Rekreasi (Rp)</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 flex items-center pl-4 font-bold text-gray-500">Rp</span>
-              <input type="number" id="nominal-rekreasi" class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 bg-white font-bold text-lg text-gray-800" placeholder="0">
-            </div>
-            <p class="text-xs text-gray-500 mt-1">*Kosongkan/nol jika belum bayar rekreasi.</p>
           </div>
         </div>
-
-        <button onclick="submitPembayaranBendahara()" class="w-full mt-8 bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-4 rounded-2xl shadow-lg shadow-orange-500/30 transition-all flex justify-center items-center gap-2 transform hover:-translate-y-0.5">
-          <i class="fas fa-check"></i> Proses Pembayaran Sekaligus
+        <button onclick="submitSPP()" class="w-full mt-8 bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-4 rounded-2xl shadow-lg shadow-orange-500/30 transition-all flex justify-center items-center gap-2 transform hover:-translate-y-0.5">
+          <i class="fas fa-check"></i> Catat Pembayaran SPP
         </button>
       </div>
 
-      <!-- ==================== [PANEL: BENDAHARA] BUKU KAS (SPP & REKREASI) ==================== -->
-      <div id="panel-bendahara-rekap" class="hidden-view fade-in">
-        
-        <!-- Statistik Buku Kas -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 text-center">
-            <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Saldo Awal</p>
-            <p id="buku-saldo-awal" class="text-xl font-black text-gray-800">Rp 0</p>
-          </div>
-          <div class="bg-green-50 p-5 rounded-2xl shadow-sm border border-green-100 text-center">
-            <p class="text-xs font-bold text-green-600 uppercase tracking-widest mb-1">Total Pemasukan</p>
-            <p id="buku-total-masuk" class="text-xl font-black text-green-700">Rp 0</p>
-          </div>
-          <div class="bg-red-50 p-5 rounded-2xl shadow-sm border border-red-100 text-center">
-            <p class="text-xs font-bold text-red-600 uppercase tracking-widest mb-1">Total Keluar</p>
-            <p id="buku-total-keluar" class="text-xl font-black text-red-700">Rp 0</p>
-          </div>
-          <div class="bg-gradient-to-r from-orange-500 to-amber-500 p-5 rounded-2xl shadow-md text-white text-center">
-            <p class="text-xs font-bold opacity-90 uppercase tracking-widest mb-1">Saldo Akhir</p>
-            <p id="buku-saldo-akhir" class="text-2xl font-black">Rp 0</p>
+      <!-- ==================== [PANEL: BENDAHARA] REKAP SPP (BARU) ==================== -->
+      <div id="panel-bendahara-rekap" class="hidden-view fade-in bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-8 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-amber-50 flex flex-col md:flex-row justify-between items-center gap-4">
+          <h3 class="text-2xl font-black text-orange-900 flex items-center"><i class="fas fa-list-alt text-orange-500 mr-3"></i> Laporan Pemasukan SPP</h3>
+          <div class="text-right">
+            <p class="text-xs font-bold text-orange-600 uppercase tracking-widest">Total SPP Terkumpul</p>
+            <p id="total-spp-terkumpul" class="text-3xl font-black text-orange-800">Rp 0</p>
           </div>
         </div>
-
-        <!-- Tabel Buku Kas Umum -->
-        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="p-6 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
-            <h3 class="text-xl font-black text-gray-800 flex items-center"><i class="fas fa-book text-amber-500 mr-3"></i> Buku Kas Umum (Bendahara)</h3>
-          </div>
-          <div class="overflow-x-auto custom-scrollbar max-h-[500px]">
-            <table class="min-w-full divide-y divide-gray-100">
-              <thead class="bg-white sticky top-0 shadow-sm z-10">
-                <tr>
-                  <th class="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Tanggal</th>
-                  <th class="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Tipe</th>
-                  <th class="px-6 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Keterangan</th>
-                  <th class="px-6 py-4 text-right text-xs font-black text-gray-500 uppercase tracking-widest">Masuk</th>
-                  <th class="px-6 py-4 text-right text-xs font-black text-gray-500 uppercase tracking-widest">Keluar</th>
-                  <th class="px-6 py-4 text-right text-xs font-black text-gray-500 uppercase tracking-widest bg-gray-50">Saldo</th>
-                </tr>
-              </thead>
-              <tbody id="table-buku-kas" class="bg-white divide-y divide-gray-50"></tbody>
-            </table>
-          </div>
+        <div class="overflow-x-auto custom-scrollbar max-h-[500px]">
+          <table class="min-w-full divide-y divide-gray-100">
+            <thead class="bg-white sticky top-0 shadow-sm z-10">
+              <tr>
+                <th class="px-8 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Waktu Bayar</th>
+                <th class="px-8 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Siswa</th>
+                <th class="px-8 py-4 text-center text-xs font-black text-gray-500 uppercase tracking-widest">Pembayaran Bulan</th>
+                <th class="px-8 py-4 text-right text-xs font-black text-gray-500 uppercase tracking-widest">Nominal</th>
+              </tr>
+            </thead>
+            <tbody id="table-rekap-spp" class="bg-white divide-y divide-gray-50"></tbody>
+          </table>
         </div>
       </div>
 
@@ -325,7 +290,7 @@
         </div>
       </div>
 
-      <!-- ==================== [PANEL: KEPSEK] LAPORAN SETORAN ==================== -->
+      <!-- ==================== [PANEL: KEPSEK] LAPORAN SETORAN (BARU) ==================== -->
       <div id="panel-kepsek-laporan" class="hidden-view fade-in bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="p-8 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h3 class="text-2xl font-black text-gray-800"><i class="fas fa-clipboard-list text-blue-600 mr-2"></i> Riwayat Setoran Disetujui</h3>
@@ -355,7 +320,7 @@
         </div>
       </div>
 
-      <!-- ==================== [ADMIN] KELOLA SISWA ==================== -->
+      <!-- ==================== [PANEL: ADMIN] KELOLA SISWA ==================== -->
       <div id="panel-admin-siswa" class="hidden-view fade-in bg-white p-8 rounded-3xl shadow-sm border border-gray-100 mb-8">
         <h3 class="text-2xl font-black text-gray-800 mb-8"><i class="fas fa-user-plus text-indigo-500 mr-2"></i>Tambah Data Siswa Baru</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -366,7 +331,7 @@
         <button onclick="tambahSiswa()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-8 rounded-2xl shadow-lg shadow-indigo-600/30 transition-all w-full md:w-auto"><i class="fas fa-save mr-2"></i> Simpan Data Siswa</button>
       </div>
 
-      <!-- ==================== [ADMIN] PENGELUARAN KAS ==================== -->
+      <!-- ==================== [PANEL: ADMIN] PENGELUARAN KAS (BARU) ==================== -->
       <div id="panel-admin-pengeluaran" class="hidden-view fade-in">
         <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 mb-8">
           <h3 class="text-2xl font-black text-gray-800 mb-6"><i class="fas fa-shopping-cart text-red-500 mr-2"></i> Catat Pengeluaran Operasional</h3>
@@ -376,7 +341,6 @@
               <select id="out-sumber" class="w-full border border-gray-300 rounded-2xl p-3.5 focus:ring-2 focus:ring-red-500 bg-gray-50 font-bold">
                 <option value="Tabungan">Kas Tabungan</option>
                 <option value="SPP">Kas SPP</option>
-                <option value="Rekreasi">Kas Rekreasi</option>
               </select>
             </div>
             <div>
@@ -392,7 +356,7 @@
         </div>
 
         <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-8 py-5 border-b border-gray-100"><h3 class="text-lg font-black text-gray-800">Riwayat Pengeluaran (Semua Kas)</h3></div>
+          <div class="px-8 py-5 border-b border-gray-100"><h3 class="text-lg font-black text-gray-800">Riwayat Pengeluaran</h3></div>
           <div class="overflow-x-auto custom-scrollbar max-h-80">
             <table class="min-w-full divide-y divide-gray-100">
               <thead class="bg-gray-50 sticky top-0 z-10">
@@ -404,29 +368,17 @@
         </div>
       </div>
 
-      <!-- ==================== [ADMIN] PENGATURAN ==================== -->
+      <!-- ==================== [PANEL: ADMIN] PENGATURAN (BARU) ==================== -->
       <div id="panel-admin-pengaturan" class="hidden-view fade-in bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-        <h3 class="text-2xl font-black text-gray-800 mb-6"><i class="fas fa-cogs text-gray-600 mr-2"></i> Pengaturan Sistem & Saldo Awal</h3>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="border border-gray-200 p-6 rounded-2xl bg-gray-50">
-            <h4 class="font-bold text-gray-800 mb-4 border-b pb-2"><i class="fas fa-money-check-alt mr-2"></i>Standar Tagihan Bulanan</h4>
-            <label class="block text-sm font-bold text-gray-600 mb-2">Nominal SPP (Rp)</label>
-            <input type="number" id="setting-spp" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 font-bold text-lg mb-4">
-            
-            <label class="block text-sm font-bold text-gray-600 mb-2">Nominal Rekreasi (Rp)</label>
-            <input type="number" id="setting-rekreasi" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 font-bold text-lg">
+        <h3 class="text-2xl font-black text-gray-800 mb-6"><i class="fas fa-cogs text-gray-600 mr-2"></i> Pengaturan Sistem</h3>
+        <div class="max-w-md border border-gray-200 p-6 rounded-2xl bg-gray-50">
+          <label class="block text-sm font-bold text-gray-700 mb-2">Setting Nominal SPP Bulanan (Rp)</label>
+          <div class="relative mb-4">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-4 font-bold text-gray-500">Rp</span>
+            <input type="number" id="setting-spp" class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 font-bold text-lg">
           </div>
-
-          <div class="border border-gray-200 p-6 rounded-2xl bg-gray-50">
-            <h4 class="font-bold text-gray-800 mb-4 border-b pb-2"><i class="fas fa-wallet mr-2"></i>Buku Kas Bendahara</h4>
-            <label class="block text-sm font-bold text-gray-600 mb-2">Saldo Tahun Ajaran Lalu (Rp)</label>
-            <input type="number" id="setting-saldo-awal" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 font-bold text-lg text-blue-600">
-            <p class="text-xs text-gray-500 mt-2">Saldo ini akan otomatis menjadi awal perhitungan di Buku Kas Umum Bendahara.</p>
-          </div>
+          <button onclick="savePengaturan()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 rounded-xl shadow transition-all">Simpan Pengaturan</button>
         </div>
-
-        <button onclick="savePengaturan()" class="mt-6 w-full md:w-auto bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-8 rounded-xl shadow transition-all"><i class="fas fa-save mr-2"></i>Simpan Semua Pengaturan</button>
       </div>
 
     </main>
@@ -441,7 +393,7 @@
     // State Globals
     let currentUser = null;
     let listSiswaAktif = [];
-    let globalSettings = { Nominal_SPP: 0, Nominal_Rekreasi: 0, Saldo_Awal_Bendahara: 0 };
+    let globalSettings = { Nominal_SPP: 0 };
     
     // States for Tables & Search
     let allSiswaData = [];
@@ -478,7 +430,7 @@
       document.getElementById(panelId).classList.remove('hidden-view');
     }
 
-    // ==================== FETCH API ====================
+    // ==================== FETCH API JEMBATAN ====================
     async function callAPI(action, payload = {}) {
       if(!API_URL || API_URL.includes("MASUKKAN")) {
         Swal.fire({icon: 'error', title: 'URL API Belum Diatur!', text: 'Ganti variabel API_URL di index.html dengan URL Web App Apps Script.'});
@@ -498,15 +450,8 @@
       const res = await callAPI('getPengaturan');
       if(res.success) {
         globalSettings = res.data;
-        
-        // Populate inputs Bendahara
-        if(document.getElementById('nominal-spp')) document.getElementById('nominal-spp').value = globalSettings.Nominal_SPP || 0;
-        if(document.getElementById('nominal-rekreasi')) document.getElementById('nominal-rekreasi').value = globalSettings.Nominal_Rekreasi || 0;
-        
-        // Populate inputs Admin Pengaturan
-        if(document.getElementById('setting-spp')) document.getElementById('setting-spp').value = globalSettings.Nominal_SPP || 0;
-        if(document.getElementById('setting-rekreasi')) document.getElementById('setting-rekreasi').value = globalSettings.Nominal_Rekreasi || 0;
-        if(document.getElementById('setting-saldo-awal')) document.getElementById('setting-saldo-awal').value = globalSettings.Saldo_Awal_Bendahara || 0;
+        document.getElementById('nominal-spp').value = globalSettings.Nominal_SPP || 0;
+        document.getElementById('setting-spp').value = globalSettings.Nominal_SPP || 0;
       }
     }
 
@@ -533,7 +478,7 @@
       });
     }
 
-    // ==================== MENU BUILDER ====================
+    // ==================== MENU BUILDER (COMPONENT SPA) ====================
     function buildMenus() {
       const c = document.getElementById('menu-container'); c.innerHTML = '';
       const role = currentUser.role.toLowerCase();
@@ -551,8 +496,8 @@
         showPanel('panel-guru-input'); loadDataSiswa('select-siswa-tabungan');
       } 
       else if (role === 'bendahara') {
-        c.innerHTML += btn('fa-cash-register', 'orange', 'Terima Pembayaran', 'SPP & Rekreasi', "showPanel('panel-bendahara-spp'); loadDataSiswa('select-siswa-spp', true)");
-        c.innerHTML += btn('fa-book', 'amber', 'Buku Kas', 'Catatan keuangan', "showPanel('panel-bendahara-rekap'); loadBukuKasBendahara()");
+        c.innerHTML += btn('fa-file-invoice-dollar', 'orange', 'Kelola SPP', 'Terima SPP', "showPanel('panel-bendahara-spp'); loadDataSiswa('select-siswa-spp', true)");
+        c.innerHTML += btn('fa-list-alt', 'amber', 'Rekap SPP', 'Laporan bulanan', "showPanel('panel-bendahara-rekap'); loadRekapSPP()");
         showPanel('panel-bendahara-spp'); loadDataSiswa('select-siswa-spp', true);
       }
       else if (role === 'kepsek' || role === 'admin') {
@@ -574,7 +519,7 @@
     // ==================== [GURU & BENDAHARA] UTILS ====================
     async function loadDataSiswa(elementId, forceAll = false) {
       const el = document.getElementById(elementId);
-      if(el.children.length > 1 && !forceAll) return; 
+      if(el.children.length > 1 && !forceAll) return; // Cache agar tidak sering loading
       
       const roleReq = forceAll ? 'Admin' : currentUser.role; 
       const res = await callAPI('getDataSiswa', { role: roleReq, kelas: currentUser.kelas });
@@ -596,29 +541,88 @@
     async function submitTransaksi() {
       const nisn = document.getElementById('select-siswa-tabungan').value, jenis = document.getElementById('jenis-trx').value, nominal = document.getElementById('nominal-trx').value;
       if (!nisn || !nominal || nominal <= 0) return Swal.fire({icon: 'warning', title: 'Data Tidak Valid'});
-      showLoading(true);
+      
+      showLoading(true, 'Menyimpan Transaksi...');
       const res = await callAPI('simpanTransaksi', { nisn, jenis, nominal, pencatat: currentUser.name });
-      Swal.close();
-      if(res.success) { showToast(res.message); document.getElementById('nominal-trx').value=''; document.getElementById('saldo-hint-container').classList.add('hidden'); loadDataSiswa('select-siswa-tabungan'); } 
-      else showToast(res.message, false);
+      
+      if(res.success) { 
+        Swal.close(); // OPTIMASI UI: Tutup loading segera agar terasa instan
+        showToast(res.message); 
+        document.getElementById('nominal-trx').value=''; 
+        document.getElementById('saldo-hint-container').classList.add('hidden'); 
+        
+        // Refresh data siswa di latar belakang (background)
+        loadDataSiswa('select-siswa-tabungan', false, true); 
+      } else {
+        Swal.close();
+        showToast(res.message, false);
+      }
+    }
+
+    // Perbaikan fungsi loadDataSiswa untuk mendukung update background tanpa menimpa pilihan dropdown saat ini
+    async function loadDataSiswa(elementId, forceAll = false, isBackground = false) {
+      const el = document.getElementById(elementId);
+      if(el.children.length > 1 && !forceAll && !isBackground) return; 
+      
+      const roleReq = forceAll ? 'Admin' : currentUser.role; 
+      const res = await callAPI('getDataSiswa', { role: roleReq, kelas: currentUser.kelas });
+      if (res.success) {
+        listSiswaAktif = res.data;
+        const currentValue = el.value; // Simpan pilihan saat ini
+        el.innerHTML = '<option value="">-- Silahkan Pilih Siswa --</option>' + res.data.map(s => `<option value="${s.nisn}">${s.nama} (${s.kelas})</option>`).join('');
+        if(currentValue) el.value = currentValue; // Kembalikan pilihan
+      }
     }
 
     async function loadRiwayatSiswa() {
       const nisn = document.getElementById('select-siswa-riwayat').value;
       const tbody = document.getElementById('table-riwayat-siswa');
-      if(!nisn) return tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-gray-400 font-bold">Pilih siswa.</td></tr>`;
+      if(!nisn) return tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-gray-400 font-bold">Pilih siswa.</td></tr>`;
       
-      tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center"><i class="fas fa-spinner fa-spin text-teal-500 text-2xl"></i></td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center"><i class="fas fa-spinner fa-spin text-teal-500 text-2xl"></i></td></tr>`;
       const res = await callAPI('getRiwayatTransaksiSiswa', { nisn });
       if(res.success && res.data.length) {
         tbody.innerHTML = res.data.map(d => `
-          <tr class="hover:bg-gray-50">
+          <tr class="hover:bg-gray-50 transition-colors">
             <td class="px-8 py-4 text-sm text-gray-500 font-bold">${formatDate(d.tanggal)}</td>
             <td class="px-8 py-4"><span class="px-3 py-1 rounded-md text-xs font-black ${d.jenis.toLowerCase()==='nabung'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${d.jenis.toUpperCase()}</span></td>
             <td class="px-8 py-4 text-sm text-right font-black text-gray-800">${formatRp(d.nominal)}</td>
             <td class="px-8 py-4 text-xs font-bold text-gray-400">${d.pencatat}</td>
+            <td class="px-8 py-4 text-center">
+              <button onclick="konfirmasiHapusTransaksi('${d.id}', '${nisn}')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors" title="Hapus Transaksi (Jika Salah Input)">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </td>
           </tr>`).join('');
-      } else tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-gray-400">Belum ada transaksi.</td></tr>`;
+      } else tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-gray-400">Belum ada transaksi.</td></tr>`;
+    }
+
+    // FUNGSI BARU: Konfirmasi dan Hapus Transaksi
+    async function konfirmasiHapusTransaksi(idTransaksi, nisn) {
+      Swal.fire({
+        title: 'Hapus Transaksi?',
+        text: "Tindakan ini tidak dapat dibatalkan. Saldo siswa akan otomatis menyesuaikan kembali.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#9ca3af',
+        confirmButtonText: 'Ya, Hapus Data',
+        cancelButtonText: 'Batal'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          showLoading(true, 'Menghapus...');
+          const res = await callAPI('hapusTransaksi', { idTransaksi: idTransaksi });
+          Swal.close();
+          
+          if(res.success) {
+            showToast('Transaksi berhasil dihapus');
+            loadRiwayatSiswa(); // Refresh tabel riwayat
+            loadDataSiswa('select-siswa-tabungan', false, true); // Refresh saldo tabungan di background
+          } else {
+            showToast(res.message, false);
+          }
+        }
+      });
     }
 
     // ==================== [GURU] SETOR KAS ====================
@@ -641,71 +645,34 @@
       });
     }
 
-    // ==================== [BENDAHARA] PEMBAYARAN SPP & REKREASI ====================
-    async function submitPembayaranBendahara() {
+    // ==================== [BENDAHARA] KELOLA SPP ====================
+    async function submitSPP() {
       const nisn = document.getElementById('select-siswa-spp').value;
-      const blnRaw = document.getElementById('bulan-spp').value; 
-      const nomSPP = document.getElementById('nominal-spp').value || 0;
-      const nomRekreasi = document.getElementById('nominal-rekreasi').value || 0;
+      const blnRaw = document.getElementById('bulan-spp').value; // Format yyyy-mm
+      const nom = document.getElementById('nominal-spp').value;
       
-      if(!nisn || !blnRaw) return Swal.fire({icon: 'warning', title: 'Pilih Siswa & Bulan Dahulu!'});
-      if(nomSPP == 0 && nomRekreasi == 0) return Swal.fire({icon: 'warning', title: 'Isi minimal salah satu nominal!'});
+      if(!nisn || !blnRaw || !nom) return Swal.fire({icon: 'warning', title: 'Isi Semua Data!'});
       
       const blnArr = blnRaw.split('-'); // 2024-07
       const dateObj = new Date(blnArr[0], blnArr[1]-1);
       const blnTahunStr = dateObj.toLocaleDateString('id-ID', {month:'long', year:'numeric'}); // "Juli 2024"
 
       showLoading(true);
-      const res = await callAPI('simpanPembayaranBendahara', { 
-        nisn: nisn, 
-        bulan: blnTahunStr, 
-        nominalSPP: nomSPP, 
-        nominalRekreasi: nomRekreasi, 
-        pencatat: currentUser.name 
-      });
-      
+      const res = await callAPI('simpanSPP', { nisn: nisn, bulan: blnTahunStr, nominal: nom, pencatat: currentUser.name });
       Swal.close();
-      if(res.success) { 
-        showToast(res.message); 
-        document.getElementById('bulan-spp').value='';
-        // Kembalikan nominal ke pengaturan default
-        document.getElementById('nominal-spp').value = globalSettings.Nominal_SPP;
-        document.getElementById('nominal-rekreasi').value = globalSettings.Nominal_Rekreasi;
-      } else {
-        Swal.fire({icon: 'error', title: 'Gagal', text: res.message});
-      }
+      if(res.success) { showToast(res.message); document.getElementById('bulan-spp').value=''; } else showToast(res.message, false);
     }
 
-    // ==================== [BENDAHARA] BUKU KAS ====================
-    async function loadBukuKasBendahara() {
+    async function loadRekapSPP() {
       showLoading(true);
-      const res = await callAPI('getBukuKasBendahara');
+      const res = await callAPI('getRekapSPP');
       Swal.close();
       if(res.success) {
-        document.getElementById('buku-saldo-awal').innerText = formatRp(res.saldoAwal);
-        document.getElementById('buku-total-masuk').innerText = formatRp(res.totalMasukSPP + res.totalMasukRekreasi);
-        document.getElementById('buku-total-keluar').innerText = formatRp(res.totalKeluar);
-        document.getElementById('buku-saldo-akhir').innerText = formatRp(res.saldoAkhir);
-        
-        const tbody = document.getElementById('table-buku-kas');
+        document.getElementById('total-spp-terkumpul').innerText = formatRp(res.total);
+        const tbody = document.getElementById('table-rekap-spp');
         if(res.data.length) {
-          tbody.innerHTML = res.data.map(d => {
-            // Styling Tipe
-            let typeColor = 'gray';
-            if (d.tipe === 'SPP') typeColor = 'blue';
-            else if (d.tipe === 'Rekreasi') typeColor = 'teal';
-            else if (d.tipe === 'Pengeluaran') typeColor = 'red';
-
-            return `<tr class="hover:bg-gray-100 transition-colors">
-              <td class="px-6 py-4 text-xs font-bold text-gray-500">${formatDate(d.tanggal)}</td>
-              <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-md text-xs font-black bg-${typeColor}-100 text-${typeColor}-700">${d.tipe}</span></td>
-              <td class="px-6 py-4 text-sm font-bold text-gray-800">${d.keterangan}<br><span class="text-xs text-gray-400 font-normal">Oleh: ${d.pencatat}</span></td>
-              <td class="px-6 py-4 text-right font-black text-green-600">${d.masuk > 0 ? formatRp(d.masuk) : '-'}</td>
-              <td class="px-6 py-4 text-right font-black text-red-500">${d.keluar > 0 ? formatRp(d.keluar) : '-'}</td>
-              <td class="px-6 py-4 text-right font-black text-gray-800 bg-gray-50/50">${formatRp(d.saldo)}</td>
-            </tr>`;
-          }).join('');
-        } else tbody.innerHTML = `<tr><td colspan="6" class="p-10 text-center text-gray-400 font-bold">Buku kas masih kosong.</td></tr>`;
+          tbody.innerHTML = res.data.map(d => `<tr class="hover:bg-gray-50"><td class="px-8 py-4 text-xs font-bold text-gray-400">${formatDate(d.tanggal)}</td><td class="px-8 py-4 font-black text-sm text-gray-800">${d.nama}<br><span class="text-xs text-gray-400">${d.nisn}</span></td><td class="px-8 py-4 text-center font-bold text-orange-600 bg-orange-50/50">${d.bulan}</td><td class="px-8 py-4 text-right font-black text-gray-800">${formatRp(d.nominal)}</td></tr>`).join('');
+        } else tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-gray-400">Data SPP Kosong.</td></tr>`;
       }
     }
 
@@ -799,33 +766,17 @@
     async function loadLaporanPengeluaran() {
       const res = await callAPI('getLaporanPengeluaran');
       const tbody = document.getElementById('table-pengeluaran');
-      if(res.success && res.data.length) tbody.innerHTML = res.data.map(d => {
-        let badgeColor = 'gray';
-        if(d.sumber==='Tabungan') badgeColor = 'blue';
-        else if(d.sumber==='SPP') badgeColor = 'orange';
-        else if(d.sumber==='Rekreasi') badgeColor = 'teal';
-
-        return `<tr><td class="px-8 py-4 text-xs font-bold text-gray-400">${formatDate(d.tanggal)}</td><td class="px-8 py-4"><span class="px-2 py-1 rounded text-xs font-black bg-${badgeColor}-100 text-${badgeColor}-700">${d.sumber}</span></td><td class="px-8 py-4 text-sm font-bold text-gray-800">${d.keterangan}</td><td class="px-8 py-4 text-right font-black text-red-600">-${formatRp(d.nominal)}</td></tr>`
-      }).join('');
+      if(res.success && res.data.length) tbody.innerHTML = res.data.map(d => `<tr><td class="px-8 py-4 text-xs font-bold text-gray-400">${formatDate(d.tanggal)}</td><td class="px-8 py-4"><span class="px-2 py-1 rounded text-xs font-black ${d.sumber==='Tabungan'?'bg-blue-100 text-blue-700':'bg-orange-100 text-orange-700'}">${d.sumber}</span></td><td class="px-8 py-4 text-sm font-bold text-gray-800">${d.keterangan}</td><td class="px-8 py-4 text-right font-black text-red-600">-${formatRp(d.nominal)}</td></tr>`).join('');
       else tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-gray-400">Kas Aman (Tidak ada pengeluaran)</td></tr>`;
     }
 
     async function savePengaturan() {
-      const nomSPP = document.getElementById('setting-spp').value;
-      const nomRekreasi = document.getElementById('setting-rekreasi').value;
-      const saldoAwal = document.getElementById('setting-saldo-awal').value;
-
+      const nom = document.getElementById('setting-spp').value;
+      if(!nom) return;
       showLoading(true);
-      const res = await callAPI('updatePengaturan', { 
-        nominalSPP: nomSPP, 
-        nominalRekreasi: nomRekreasi, 
-        saldoAwal: saldoAwal 
-      });
+      const res = await callAPI('updatePengaturan', { nominal: nom });
       Swal.close();
-      if(res.success) { 
-        showToast(res.message); 
-        await initSettings(); 
-      }
+      if(res.success) { showToast(res.message); await initSettings(); }
     }
   </script>
 </body>
