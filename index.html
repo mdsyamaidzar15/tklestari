@@ -4,17 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistem Informasi Keuangan TK PKK Lestari</title>
-  <!-- Tailwind CSS -->
+  
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Font Awesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-  <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   
   <style>
     .hidden-view { display: none !important; }
     
-    /* Custom Scrollbar for Table */
+    /* Custom Scrollbar */
     .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -111,11 +109,20 @@
               <option value="Tarik">🔴 Penarikan (Uang Keluar)</option>
             </select>
           </div>
+          <!-- PERBAIKAN: Pembungkus col-span-2 agar tidak berantakan -->
           <div class="md:col-span-2">
             <label class="block text-sm font-bold text-gray-700 mb-2">Nominal Transaksi (Rp)</label>
-            <div class="relative">
+            <div class="relative mb-6">
               <span class="absolute inset-y-0 left-0 flex items-center pl-5 font-bold text-gray-500 text-lg">Rp</span>
               <input type="number" id="nominal-trx" class="w-full pl-14 pr-4 py-4 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 bg-gray-50 text-xl font-black text-gray-800 transition-all" placeholder="5000">
+            </div>
+            <button onclick="submitTransaksi()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5">
+              <i class="fas fa-save mr-2"></i> Simpan Transaksi Tabungan
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- ==================== [PANEL: GURU] RIWAYAT SISWA ==================== -->
       <div id="panel-guru-riwayat" class="hidden-view fade-in bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="p-8 border-b border-gray-100 bg-gray-50/50">
@@ -167,9 +174,31 @@
             <button onclick="submitSetoran()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-green-500/30 transition-all transform hover:-translate-y-0.5"><i class="fas fa-check-circle mr-2"></i>Kirim Setoran ke Kepsek</button>
           </div>
         </div>
+
+        <!-- PERBAIKAN: TABEL REKAP KELAS UNTUK GURU -->
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="p-8 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+            <h3 class="text-xl font-black text-gray-800 flex items-center"><i class="fas fa-users text-blue-500 mr-3 text-2xl"></i> Rekap Saldo Kelas Anda</h3>
+            <button onclick="loadRekapGuru()" class="bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm"><i class="fas fa-sync-alt mr-2 text-blue-500"></i>Refresh</button>
+          </div>
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="min-w-full divide-y divide-gray-100">
+              <thead class="bg-white sticky top-0 shadow-sm z-10">
+                <tr>
+                  <th class="px-8 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">NISN</th>
+                  <th class="px-8 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Nama Siswa</th>
+                  <th class="px-8 py-4 text-right text-xs font-black text-gray-500 uppercase tracking-widest">Total Saldo</th>
+                </tr>
+              </thead>
+              <tbody id="table-rekap-guru" class="bg-white divide-y divide-gray-50">
+                <tr><td colspan="3" class="p-10 text-center text-gray-400 font-bold">Memuat data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
-      <!-- ==================== [PANEL: BENDAHARA] KELOLA SPP (BARU) ==================== -->
+      <!-- ==================== [PANEL: BENDAHARA] KELOLA SPP ==================== -->
       <div id="panel-bendahara-spp" class="hidden-view fade-in bg-white p-8 rounded-3xl shadow-sm border border-gray-100 mb-8">
         <h3 class="text-2xl font-black text-gray-800 mb-6 flex items-center">
           <div class="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mr-3 shadow-sm"><i class="fas fa-file-invoice-dollar"></i></div> Pembayaran SPP Bulanan
@@ -196,12 +225,12 @@
         </button>
       </div>
 
-      <!-- ==================== [PANEL: BENDAHARA] REKAP SPP (BARU) ==================== -->
+      <!-- ==================== [PANEL: BENDAHARA] REKAP BUKU KAS ==================== -->
       <div id="panel-bendahara-rekap" class="hidden-view fade-in bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="p-8 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-amber-50 flex flex-col md:flex-row justify-between items-center gap-4">
-          <h3 class="text-2xl font-black text-orange-900 flex items-center"><i class="fas fa-list-alt text-orange-500 mr-3"></i> Laporan Pemasukan SPP</h3>
+          <h3 class="text-2xl font-black text-orange-900 flex items-center"><i class="fas fa-book text-orange-500 mr-3"></i> Buku Kas SPP & Rekreasi</h3>
           <div class="text-right">
-            <p class="text-xs font-bold text-orange-600 uppercase tracking-widest">Total SPP Terkumpul</p>
+            <p class="text-xs font-bold text-orange-600 uppercase tracking-widest">Saldo Kas Terkini</p>
             <p id="total-spp-terkumpul" class="text-3xl font-black text-orange-800">Rp 0</p>
           </div>
         </div>
@@ -209,10 +238,10 @@
           <table class="min-w-full divide-y divide-gray-100">
             <thead class="bg-white sticky top-0 shadow-sm z-10">
               <tr>
-                <th class="px-8 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Waktu Bayar</th>
-                <th class="px-8 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Siswa</th>
-                <th class="px-8 py-4 text-center text-xs font-black text-gray-500 uppercase tracking-widest">Pembayaran Bulan</th>
-                <th class="px-8 py-4 text-right text-xs font-black text-gray-500 uppercase tracking-widest">Nominal</th>
+                <th class="px-8 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Waktu</th>
+                <th class="px-8 py-4 text-left text-xs font-black text-gray-500 uppercase tracking-widest">Keterangan</th>
+                <th class="px-8 py-4 text-center text-xs font-black text-gray-500 uppercase tracking-widest">Jenis/Sumber</th>
+                <th class="px-8 py-4 text-right text-xs font-black text-gray-500 uppercase tracking-widest">Nominal Transaksi</th>
               </tr>
             </thead>
             <tbody id="table-rekap-spp" class="bg-white divide-y divide-gray-50"></tbody>
@@ -290,7 +319,7 @@
         </div>
       </div>
 
-      <!-- ==================== [PANEL: KEPSEK] LAPORAN SETORAN (BARU) ==================== -->
+      <!-- ==================== [PANEL: KEPSEK] LAPORAN SETORAN ==================== -->
       <div id="panel-kepsek-laporan" class="hidden-view fade-in bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="p-8 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h3 class="text-2xl font-black text-gray-800"><i class="fas fa-clipboard-list text-blue-600 mr-2"></i> Riwayat Setoran Disetujui</h3>
@@ -331,7 +360,7 @@
         <button onclick="tambahSiswa()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-8 rounded-2xl shadow-lg shadow-indigo-600/30 transition-all w-full md:w-auto"><i class="fas fa-save mr-2"></i> Simpan Data Siswa</button>
       </div>
 
-      <!-- ==================== [PANEL: ADMIN] PENGELUARAN KAS (BARU) ==================== -->
+      <!-- ==================== [PANEL: ADMIN] PENGELUARAN KAS ==================== -->
       <div id="panel-admin-pengeluaran" class="hidden-view fade-in">
         <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 mb-8">
           <h3 class="text-2xl font-black text-gray-800 mb-6"><i class="fas fa-shopping-cart text-red-500 mr-2"></i> Catat Pengeluaran Operasional</h3>
@@ -368,7 +397,7 @@
         </div>
       </div>
 
-      <!-- ==================== [PANEL: ADMIN] PENGATURAN (BARU) ==================== -->
+      <!-- ==================== [PANEL: ADMIN] PENGATURAN ==================== -->
       <div id="panel-admin-pengaturan" class="hidden-view fade-in bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
         <h3 class="text-2xl font-black text-gray-800 mb-6"><i class="fas fa-cogs text-gray-600 mr-2"></i> Pengaturan Sistem</h3>
         <div class="max-w-md border border-gray-200 p-6 rounded-2xl bg-gray-50">
@@ -433,7 +462,7 @@
     // ==================== FETCH API JEMBATAN ====================
     async function callAPI(action, payload = {}) {
       if(!API_URL || API_URL.includes("MASUKKAN")) {
-        Swal.fire({icon: 'error', title: 'URL API Belum Diatur!', text: 'Ganti variabel API_URL di index.html dengan URL Web App Apps Script.'});
+        Swal.fire({icon: 'error', title: 'URL API Belum Diatur!', text: 'Ganti variabel API_URL di index.html dengan URL Web App Apps Script Anda.'});
         return { success: false, message: "API URL Missing" };
       }
       try {
@@ -492,12 +521,12 @@
       if (role === 'guru') {
         c.innerHTML += btn('fa-cash-register', 'blue', 'Input Tabungan', 'Catat harian', "showPanel('panel-guru-input'); loadDataSiswa('select-siswa-tabungan')");
         c.innerHTML += btn('fa-history', 'teal', 'Riwayat Siswa', 'Buku detail anak', "showPanel('panel-guru-riwayat'); loadDataSiswa('select-siswa-riwayat')");
-        c.innerHTML += btn('fa-paper-plane', 'green', 'Setor Kas', 'Kirim uang ke Kepsek', "showPanel('panel-guru-setor'); loadInfoSetoranGuru()");
+        c.innerHTML += btn('fa-paper-plane', 'green', 'Setor Kas', 'Kirim uang ke Kepsek', "showPanel('panel-guru-setor'); loadInfoSetoranGuru(); loadRekapGuru()");
         showPanel('panel-guru-input'); loadDataSiswa('select-siswa-tabungan');
       } 
       else if (role === 'bendahara') {
         c.innerHTML += btn('fa-file-invoice-dollar', 'orange', 'Kelola SPP', 'Terima SPP', "showPanel('panel-bendahara-spp'); loadDataSiswa('select-siswa-spp', true)");
-        c.innerHTML += btn('fa-list-alt', 'amber', 'Rekap SPP', 'Laporan bulanan', "showPanel('panel-bendahara-rekap'); loadRekapSPP()");
+        c.innerHTML += btn('fa-book', 'amber', 'Buku Kas SPP', 'Laporan bulanan', "showPanel('panel-bendahara-rekap'); loadRekapSPP()");
         showPanel('panel-bendahara-spp'); loadDataSiswa('select-siswa-spp', true);
       }
       else if (role === 'kepsek' || role === 'admin') {
@@ -517,15 +546,18 @@
     }
 
     // ==================== [GURU & BENDAHARA] UTILS ====================
-    async function loadDataSiswa(elementId, forceAll = false) {
+    async function loadDataSiswa(elementId, forceAll = false, isBackground = false) {
       const el = document.getElementById(elementId);
-      if(el.children.length > 1 && !forceAll) return; // Cache agar tidak sering loading
+      if(!el) return;
+      if(el.children.length > 1 && !forceAll && !isBackground) return; 
       
       const roleReq = forceAll ? 'Admin' : currentUser.role; 
       const res = await callAPI('getDataSiswa', { role: roleReq, kelas: currentUser.kelas });
       if (res.success) {
         listSiswaAktif = res.data;
+        const currentValue = el.value; 
         el.innerHTML = '<option value="">-- Silahkan Pilih Siswa --</option>' + res.data.map(s => `<option value="${s.nisn}">${s.nama} (${s.kelas})</option>`).join('');
+        if(currentValue) el.value = currentValue; 
       }
     }
 
@@ -546,31 +578,15 @@
       const res = await callAPI('simpanTransaksi', { nisn, jenis, nominal, pencatat: currentUser.name });
       
       if(res.success) { 
-        Swal.close(); // OPTIMASI UI: Tutup loading segera agar terasa instan
+        Swal.close(); 
         showToast(res.message); 
         document.getElementById('nominal-trx').value=''; 
         document.getElementById('saldo-hint-container').classList.add('hidden'); 
         
-        // Refresh data siswa di latar belakang (background)
         loadDataSiswa('select-siswa-tabungan', false, true); 
       } else {
         Swal.close();
         showToast(res.message, false);
-      }
-    }
-
-    // Perbaikan fungsi loadDataSiswa untuk mendukung update background tanpa menimpa pilihan dropdown saat ini
-    async function loadDataSiswa(elementId, forceAll = false, isBackground = false) {
-      const el = document.getElementById(elementId);
-      if(el.children.length > 1 && !forceAll && !isBackground) return; 
-      
-      const roleReq = forceAll ? 'Admin' : currentUser.role; 
-      const res = await callAPI('getDataSiswa', { role: roleReq, kelas: currentUser.kelas });
-      if (res.success) {
-        listSiswaAktif = res.data;
-        const currentValue = el.value; // Simpan pilihan saat ini
-        el.innerHTML = '<option value="">-- Silahkan Pilih Siswa --</option>' + res.data.map(s => `<option value="${s.nisn}">${s.nama} (${s.kelas})</option>`).join('');
-        if(currentValue) el.value = currentValue; // Kembalikan pilihan
       }
     }
 
@@ -597,35 +613,22 @@
       } else tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-gray-400">Belum ada transaksi.</td></tr>`;
     }
 
-    // FUNGSI BARU: Konfirmasi dan Hapus Transaksi
     async function konfirmasiHapusTransaksi(idTransaksi, nisn) {
       Swal.fire({
-        title: 'Hapus Transaksi?',
-        text: "Tindakan ini tidak dapat dibatalkan. Saldo siswa akan otomatis menyesuaikan kembali.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#9ca3af',
-        confirmButtonText: 'Ya, Hapus Data',
-        cancelButtonText: 'Batal'
+        title: 'Hapus Transaksi?', text: "Tindakan ini tidak dapat dibatalkan. Saldo siswa akan menyesuaikan otomatis.",
+        icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus Data', cancelButtonText: 'Batal'
       }).then(async (result) => {
         if (result.isConfirmed) {
           showLoading(true, 'Menghapus...');
           const res = await callAPI('hapusTransaksi', { idTransaksi: idTransaksi });
           Swal.close();
-          
-          if(res.success) {
-            showToast('Transaksi berhasil dihapus');
-            loadRiwayatSiswa(); // Refresh tabel riwayat
-            loadDataSiswa('select-siswa-tabungan', false, true); // Refresh saldo tabungan di background
-          } else {
-            showToast(res.message, false);
-          }
+          if(res.success) { showToast('Transaksi dihapus'); loadRiwayatSiswa(); loadDataSiswa('select-siswa-tabungan', false, true); } 
+          else showToast(res.message, false);
         }
       });
     }
 
-    // ==================== [GURU] SETOR KAS ====================
+    // ==================== [GURU] SETOR KAS & REKAP ====================
     async function loadInfoSetoranGuru() {
       const res = await callAPI('getInfoSetoranGuru', { guru: currentUser.name });
       if(res.success) document.getElementById('kas-tangan-guru').innerText = formatRp(res.kasTangan);
@@ -645,6 +648,24 @@
       });
     }
 
+    async function loadRekapGuru() {
+      const tbody = document.getElementById('table-rekap-guru');
+      tbody.innerHTML = `<tr><td colspan="3" class="p-10 text-center"><i class="fas fa-spinner fa-spin text-blue-500 text-2xl"></i></td></tr>`;
+      
+      const res = await callAPI('getDataSiswa', { role: currentUser.role, kelas: currentUser.kelas });
+      if (res.success && res.data.length > 0) {
+        tbody.innerHTML = res.data.map(s => `
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-8 py-4 text-sm font-bold text-gray-500">${s.nisn}</td>
+            <td class="px-8 py-4 text-sm font-black text-gray-800">${s.nama}</td>
+            <td class="px-8 py-4 text-right text-sm font-black ${s.saldo > 0 ? 'text-green-600' : 'text-gray-400'}">${formatRp(s.saldo)}</td>
+          </tr>
+        `).join('');
+      } else {
+        tbody.innerHTML = `<tr><td colspan="3" class="p-10 text-center text-gray-400 font-bold">Belum ada data siswa/tabungan.</td></tr>`;
+      }
+    }
+
     // ==================== [BENDAHARA] KELOLA SPP ====================
     async function submitSPP() {
       const nisn = document.getElementById('select-siswa-spp').value;
@@ -657,22 +678,33 @@
       const dateObj = new Date(blnArr[0], blnArr[1]-1);
       const blnTahunStr = dateObj.toLocaleDateString('id-ID', {month:'long', year:'numeric'}); // "Juli 2024"
 
-      showLoading(true);
-      const res = await callAPI('simpanSPP', { nisn: nisn, bulan: blnTahunStr, nominal: nom, pencatat: currentUser.name });
+      showLoading(true, "Mencatat SPP...");
+      // PERBAIKAN: API Sesuai yang ada di Backend -> simpanPembayaranBendahara
+      const res = await callAPI('simpanPembayaranBendahara', { nisn: nisn, bulan: blnTahunStr, nominalSPP: nom, nominalRekreasi: 0, pencatat: currentUser.name });
       Swal.close();
       if(res.success) { showToast(res.message); document.getElementById('bulan-spp').value=''; } else showToast(res.message, false);
     }
 
     async function loadRekapSPP() {
       showLoading(true);
-      const res = await callAPI('getRekapSPP');
+      // PERBAIKAN: API sesuai yang ada di Backend -> getBukuKasBendahara
+      const res = await callAPI('getBukuKasBendahara');
       Swal.close();
       if(res.success) {
-        document.getElementById('total-spp-terkumpul').innerText = formatRp(res.total);
+        document.getElementById('total-spp-terkumpul').innerText = formatRp(res.saldoAkhir);
         const tbody = document.getElementById('table-rekap-spp');
         if(res.data.length) {
-          tbody.innerHTML = res.data.map(d => `<tr class="hover:bg-gray-50"><td class="px-8 py-4 text-xs font-bold text-gray-400">${formatDate(d.tanggal)}</td><td class="px-8 py-4 font-black text-sm text-gray-800">${d.nama}<br><span class="text-xs text-gray-400">${d.nisn}</span></td><td class="px-8 py-4 text-center font-bold text-orange-600 bg-orange-50/50">${d.bulan}</td><td class="px-8 py-4 text-right font-black text-gray-800">${formatRp(d.nominal)}</td></tr>`).join('');
-        } else tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-gray-400">Data SPP Kosong.</td></tr>`;
+          tbody.innerHTML = res.data.map(d => `
+            <tr class="hover:bg-gray-50">
+              <td class="px-8 py-4 text-xs font-bold text-gray-400">${formatDate(d.tanggal)}</td>
+              <td class="px-8 py-4 font-black text-sm text-gray-800">${d.keterangan}</td>
+              <td class="px-8 py-4 text-center font-bold">
+                <span class="px-3 py-1 rounded-md text-xs ${d.tipe === 'Pengeluaran' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}">${d.tipe}</span>
+              </td>
+              <td class="px-8 py-4 text-right font-black text-gray-800">${d.masuk > 0 ? formatRp(d.masuk) : '- ' + formatRp(d.keluar)}</td>
+            </tr>
+          `).join('');
+        } else tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-gray-400">Data Buku Kas Kosong.</td></tr>`;
       }
     }
 
@@ -774,7 +806,7 @@
       const nom = document.getElementById('setting-spp').value;
       if(!nom) return;
       showLoading(true);
-      const res = await callAPI('updatePengaturan', { nominal: nom });
+      const res = await callAPI('updatePengaturan', { nominalSPP: nom, nominalRekreasi: 0, saldoAwal: 0 }); // Tambahkan parameter opsional untuk cegah error API
       Swal.close();
       if(res.success) { showToast(res.message); await initSettings(); }
     }
