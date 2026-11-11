@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SIK TK PKK Lestari</title>
 <link rel="icon" href="logo-tk.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net"><link rel="dns-prefetch" href="https://script.google.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com/3.4.17"></script>
@@ -89,7 +91,7 @@ const rp = n => new Intl.NumberFormat('id-ID', {style:'currency', currency:'IDR'
 const tgl = s => { const d = new Date(s); return isNaN(d) ? '-' : d.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}); };
 const num = id => Number(($(id).value || '').replace(/\D/g, '')) || 0;
 const role = () => user.role.toLowerCase();
-let user = null, siswa = [], settings = {}, busy = false, lastAct = Date.now(), allS = [], lap = [], kasTangan = 0;
+let user = null, siswa = [], siswaAt = 0, dt, settings = {}, busy = false, lastAct = Date.now(), allS = [], lap = [], kasTangan = 0;
 
 const store = {
   get(){ try { return JSON.parse(sessionStorage.getItem('sik')); } catch { return null; } },
@@ -137,10 +139,15 @@ const fail = r => { if (r && !r.success) toast(r.message, false); return r && r.
 function fill(sel, q = '') {
   q = q.toLowerCase();
   const list = siswa.filter(s => (s.nama + s.nisn).toLowerCase().includes(q));
-  $(sel).innerHTML = '<option value="">-- Pilih siswa --</option>' + list.map(s => `<option value="${esc(s.nisn)}">${esc(s.nama)} (${esc(s.kelas)})</option>`).join('');
+  $(sel).innerHTML = '<option value="">-- Pilih siswa --</option>' + list.slice(0, 100).map(s => `<option value="${esc(s.nisn)}">${esc(s.nama)} (${esc(s.kelas)})</option>`).join('') + (list.length > 100 ? '<option disabled>Ketik nama untuk mempersempit...</option>' : '');
   if (q && list.length === 1) { $(sel).value = list[0].nisn; $(sel).dispatchEvent(new Event('change', {bubbles:true})); }
 }
-async function loadSiswa() { const r = await api('getDataSiswa'); if (r.success) siswa = r.data; else toast(r.message, false); }
+async function loadSiswa(force) {            // cache 60 detik agar tidak memanggil server terus
+  if (!force && siswa.length && Date.now() - siswaAt < 60000) return;
+  const r = await api('getDataSiswa');
+  if (r.success) { siswa = r.data; siswaAt = Date.now(); } else toast(r.message, false);
+}
+const deb = fn => { clearTimeout(dt); dt = setTimeout(fn, 200); };
 
 // ---------- Menu & navigasi ----------
 const MENUS = {
@@ -174,7 +181,7 @@ function side(open) {
   $('ov').classList.toggle('hidden', !open);
 }
 function forceLogout(msg) {
-  user = null; store.del(); siswa = []; allS = []; lap = []; settings = {};
+  user = null; store.del(); siswa = []; siswaAt = 0; allS = []; lap = []; settings = {};
   $('content').innerHTML = ''; $('lf').reset();
   $('app').classList.add('hidden'); $('login').classList.remove('hidden');
   if (msg) toast(msg, false);
@@ -206,7 +213,7 @@ const PAGES = {
     const [a] = await Promise.all([api('getInfoSetoranGuru'), loadSiswa()]);
     kasTangan = a.success ? a.kasTangan : 0;
     $('kas').innerHTML = stat(kasTangan < 0 ? 'orange' : 'green', 'Kas di tangan (belum disetor)', rp(kasTangan), 'fa-money-bill-wave', a.peringatan ? esc(a.peringatan) : '');
-    $('rk').innerHTML = tbl([['NISN'], ['Nama'], ['Saldo', 'text-right']], siswa.map(s => `<tr><td class="td text-slate-500">${esc(s.nisn)}</td><td class="td font-semibold">${esc(s.nama)}</td><td class="td text-right font-bold ${s.saldo > 0 ? 'text-emerald-600' : 'text-slate-400'}">${rp(s.saldo)}</td></tr>`).join(''));
+    pager('rk', [['NISN'], ['Nama'], ['Saldo', 'text-right']], siswa.map(s => `<tr><td class="td text-slate-500">${esc(s.nisn)}</td><td class="td font-semibold">${esc(s.nama)}</td><td class="td text-right font-bold ${s.saldo > 0 ? 'text-emerald-600' : 'text-slate-400'}">${rp(s.saldo)}</td></tr>`));
   },
 
   // === BENDAHARA ===
@@ -227,11 +234,12 @@ const PAGES = {
     view(head('Buku kas SPP', 'Pemasukan dan pengeluaran kas SPP') + `<div class="mb-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       ${stat('orange', 'Saldo kas terkini', rp(r.saldoAkhir), 'fa-wallet')}${stat('indigo', 'Saldo awal', rp(r.saldoAwal), 'fa-flag')}
       ${stat('green', 'Total SPP masuk', rp(r.totalMasukSPP), 'fa-arrow-down')}${stat('cyan', 'Total pengeluaran', rp(r.totalKeluar), 'fa-arrow-up')}</div>
-      <div class="card overflow-hidden">${tbl([['Waktu'], ['Keterangan'], ['Jenis'], ['Nominal', 'text-right'], ['Saldo', 'text-right']], r.data.map(d => `<tr>
+      <div id="kas-tbl" class="card overflow-hidden"></div>`);
+    pager('kas-tbl', [['Waktu'], ['Keterangan'], ['Jenis'], ['Nominal', 'text-right'], ['Saldo', 'text-right']], r.data.map(d => `<tr>
         <td class="td whitespace-nowrap text-xs text-slate-500">${tgl(d.tanggal)}</td><td class="td font-semibold">${esc(d.keterangan)}</td>
         <td class="td">${bdg(d.tipe, d.tipe === 'Pengeluaran' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700')}</td>
         <td class="td text-right font-bold ${d.masuk > 0 ? 'text-emerald-600' : 'text-rose-600'}">${d.masuk > 0 ? rp(d.masuk) : '-' + rp(d.keluar)}</td>
-        <td class="td text-right text-slate-500">${rp(d.saldo)}</td></tr>`).join(''))}</div>`);
+        <td class="td text-right text-slate-500">${rp(d.saldo)}</td></tr>`));
   },
 
   // === KEPSEK & ADMIN ===
@@ -280,9 +288,9 @@ const PAGES = {
       <button data-act="keluar" class="btn bg-rose-500 hover:bg-rose-600 sm:col-span-3"><i class="fas fa-minus-circle"></i>Potong kas</button></div>
       <div class="card overflow-hidden"><div class="border-b border-slate-200 p-5 font-semibold">Riwayat pengeluaran</div><div id="o-tbl"></div></div>`);
     const r = await api('getLaporanPengeluaran');
-    $('o-tbl').innerHTML = tbl([['Tanggal'], ['Sumber'], ['Keperluan'], ['Nominal', 'text-right']], (r.success ? r.data : []).map(d => `<tr><td class="td whitespace-nowrap text-xs text-slate-500">${tgl(d.tanggal)}</td>
+    pager('o-tbl', [['Tanggal'], ['Sumber'], ['Keperluan'], ['Nominal', 'text-right']], (r.success ? r.data : []).map(d => `<tr><td class="td whitespace-nowrap text-xs text-slate-500">${tgl(d.tanggal)}</td>
       <td class="td">${bdg(d.sumber, d.sumber === 'Tabungan' ? 'bg-indigo-100 text-indigo-700' : 'bg-orange-100 text-orange-700')}</td><td class="td font-semibold">${esc(d.keterangan)}</td>
-      <td class="td text-right font-bold text-rose-600">-${rp(d.nominal)}</td></tr>`).join(''));
+      <td class="td text-right font-bold text-rose-600">-${rp(d.nominal)}</td></tr>`));
   },
   async atur() {
     const r = await api('getPengaturan'); if (r.success) settings = r.data;
@@ -295,28 +303,45 @@ const PAGES = {
 };
 PAGES.kasspp = PAGES.kas;
 
+const PG = {};
+function pager(id, h, rows, size) { PG[id] = {h, rows, size: size || 10, page: 1}; renderPg(id); }
+function renderPg(id) {
+  const s = PG[id], n = s.rows.length, pages = Math.max(1, Math.ceil(n / s.size));
+  s.page = Math.min(Math.max(1, s.page), pages);
+  const a = (s.page - 1) * s.size, b = Math.min(a + s.size, n);
+  let nav = '';
+  if (n > s.size) {
+    const btn = (p, t, on, dis) => `<button data-act="pg" data-id="${id}" data-p="${p}" ${dis ? 'disabled' : ''} class="min-w-9 rounded-lg border px-2.5 py-1.5 text-xs font-semibold disabled:opacity-40 ${on ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-200 bg-white hover:bg-slate-50'}">${t}</button>`;
+    const nums = [...new Set([1, pages, s.page - 1, s.page, s.page + 1])].filter(p => p >= 1 && p <= pages).sort((x, y) => x - y);
+    let prev = 0, mid = '';
+    nums.forEach(p => { if (p - prev > 1) mid += '<span class="px-1 text-slate-400">…</span>'; mid += btn(p, p, p === s.page); prev = p; });
+    nav = `<div class="flex flex-col items-center justify-between gap-2 border-t border-slate-200 p-3 sm:flex-row sm:px-5"><span class="text-xs text-slate-500">Menampilkan ${a + 1}–${b} dari ${n}</span>
+      <div class="flex flex-wrap items-center gap-1">${btn(s.page - 1, '‹', false, s.page === 1)}${mid}${btn(s.page + 1, '›', false, s.page === pages)}</div></div>`;
+  }
+  $(id).innerHTML = tbl(s.h, s.rows.slice(a, b).join('')) + nav;
+}
 function renderRekap(q) {
   q = q.toLowerCase();
-  $('rekap-tbl').innerHTML = tbl([['Kelas'], ['NISN'], ['Nama'], ['Saldo', 'text-right']], allS.filter(s => (s.nama + s.nisn).toLowerCase().includes(q)).map(s => `<tr>
+  pager('rekap-tbl', [['Kelas'], ['NISN'], ['Nama'], ['Saldo', 'text-right']], allS.filter(s => (s.nama + s.nisn).toLowerCase().includes(q)).map(s => `<tr>
     <td class="td">${bdg(s.kelas, 'bg-indigo-100 text-indigo-700')}</td><td class="td text-slate-500">${esc(s.nisn)}</td><td class="td font-semibold">${esc(s.nama)}</td>
-    <td class="td text-right font-bold ${s.saldo > 0 ? 'text-emerald-600' : s.saldo < 0 ? 'text-rose-600' : 'text-slate-400'}">${rp(s.saldo)}</td></tr>`).join(''));
+    <td class="td text-right font-bold ${s.saldo > 0 ? 'text-emerald-600' : s.saldo < 0 ? 'text-rose-600' : 'text-slate-400'}">${rp(s.saldo)}</td></tr>`));
 }
 function renderLap() {
   const f = $('f-lap').value, now = new Date(); let total = 0;
   const list = lap.filter(d => { const x = new Date(d.tgl_acc); if (f === 'bulan') return x.getMonth() === now.getMonth() && x.getFullYear() === now.getFullYear(); if (f === 'tahun') return x.getFullYear() === now.getFullYear(); return true; });
-  $('lap-tbl').innerHTML = tbl([['Disetujui'], ['Guru penyetor'], ['Nominal', 'text-right']], list.map(d => { total += Number(d.nominal) || 0;
-    return `<tr><td class="td whitespace-nowrap text-slate-500">${tgl(d.tgl_acc)}</td><td class="td font-semibold">${esc(d.guru)} <span class="text-xs text-slate-400">(${esc(d.kelas)})</span></td><td class="td text-right font-bold text-indigo-600">${rp(d.nominal)}</td></tr>`; }).join(''));
+  pager('lap-tbl', [['Disetujui'], ['Guru penyetor'], ['Nominal', 'text-right']], list.map(d => { total += Number(d.nominal) || 0;
+    return `<tr><td class="td whitespace-nowrap text-slate-500">${tgl(d.tgl_acc)}</td><td class="td font-semibold">${esc(d.guru)} <span class="text-xs text-slate-400">(${esc(d.kelas)})</span></td><td class="td text-right font-bold text-indigo-600">${rp(d.nominal)}</td></tr>`; }));
   $('lap-total').textContent = rp(total);
 }
 async function loadRiw() {
   const n = $('r-siswa').value, box = $('riw');
   if (!n) return box.innerHTML = '<p class="py-10 text-center text-slate-400">Pilih siswa untuk melihat riwayat.</p>';
   const r = await api('getRiwayatTransaksiSiswa', {nisn:n}); if (!fail(r)) return;
-  box.innerHTML = tbl([['Tanggal'], ['Jenis'], ['Nominal', 'text-right'], ['Pencatat'], ['Aksi', 'text-center']], r.data.map(d => `<tr>
+  pager('riw', [['Tanggal'], ['Jenis'], ['Nominal', 'text-right'], ['Pencatat'], ['Aksi', 'text-center']], r.data.map(d => `<tr>
     <td class="td whitespace-nowrap text-xs text-slate-500">${tgl(d.tanggal)}</td>
     <td class="td">${bdg(String(d.jenis).toUpperCase(), String(d.jenis).toLowerCase() === 'nabung' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700')}</td>
     <td class="td text-right font-bold">${rp(d.nominal)}</td><td class="td text-xs text-slate-400">${esc(d.pencatat)}</td>
-    <td class="td text-center"><button data-act="batal" data-id="${esc(d.id)}" class="rounded-lg bg-rose-50 p-2 text-rose-600 hover:bg-rose-100" title="Batalkan transaksi"><i class="fas fa-ban"></i></button></td></tr>`).join(''));
+    <td class="td text-center"><button data-act="batal" data-id="${esc(d.id)}" class="rounded-lg bg-rose-50 p-2 text-rose-600 hover:bg-rose-100" title="Batalkan transaksi"><i class="fas fa-ban"></i></button></td></tr>`));
 }
 function hint() {
   const s = siswa.find(x => x.nisn === $('s-siswa').value);
@@ -326,6 +351,7 @@ function hint() {
 // ---------- Aksi tombol ----------
 const ACT = {
   menu() { side($('side').classList.contains('-translate-x-full')); },
+  pg(d) { PG[d.id].page = Number(d.p); renderPg(d.id); },
   eye(d, el) {
     const p = $('p'), show = p.type === 'password';
     p.type = show ? 'text' : 'password';
@@ -345,7 +371,7 @@ const ACT = {
     if (!await ask(j === 'Nabung' ? 'Simpan tabungan?' : 'Proses penarikan?', s.nama + ': ' + rp(v))) return;
     const r = await work(() => api('simpanTransaksi', {nisn:n, jenis:j, nominal:v})); if (!r) return;
     if (fail(r)) {
-      toast(r.message); $('nom').value = ''; await loadSiswa();
+      toast(r.message); $('nom').value = ''; await loadSiswa(true);
       const q = document.querySelector('[data-q="s-siswa"]'); q.value = ''; fill('s-siswa'); hint(); q.focus();
     }
   },
@@ -353,7 +379,7 @@ const ACT = {
     const x = await Swal.fire({title:'Batalkan transaksi?', input:'text', inputLabel:'Alasan pembatalan', inputValue:'Salah input', showCancelButton:true, confirmButtonText:'Ya, batalkan', cancelButtonText:'Tutup', confirmButtonColor:'#ef4444'});
     if (!x.isConfirmed) return;
     const r = await work(() => api('hapusTransaksi', {idTransaksi:d.id, alasan:x.value})); if (!r) return;
-    if (fail(r)) { toast(r.message); loadRiw(); }
+    if (fail(r)) { toast(r.message); siswaAt = 0; loadRiw(); }
   },
   async setor() {
     const v = num('nom-setor');
@@ -411,8 +437,8 @@ document.addEventListener('keydown', () => lastAct = Date.now());
 document.addEventListener('input', e => {
   const t = e.target;
   if (t.classList.contains('money')) { const d = t.value.replace(/\D/g, ''); t.value = d ? Number(d).toLocaleString('id-ID') : ''; }
-  if (t.dataset.q === 'rekap') renderRekap(t.value);
-  else if (t.dataset.q) fill(t.dataset.q, t.value);
+  if (t.dataset.q === 'rekap') deb(() => renderRekap(t.value));
+  else if (t.dataset.q) deb(() => fill(t.dataset.q, t.value));
 });
 document.addEventListener('change', e => {
   if (e.target.id === 's-siswa') hint();
