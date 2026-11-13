@@ -24,6 +24,20 @@
 .badge{@apply inline-block rounded-md px-2 py-0.5 text-xs font-bold}
 }
 </style>
+<style>
+#bnav{bottom:calc(1rem + env(safe-area-inset-bottom));transition:transform .35s ease,opacity .35s ease}
+#bnav.bhide{transform:translateY(180%);opacity:0;pointer-events:none}
+.bi{transition:all .25s ease}
+.bi-on{background:#4f46e5;color:#fff;transform:translateY(-14px);box-shadow:0 8px 16px rgba(79,70,229,.35);border:4px solid #fff}
+@media (max-width:1023px){
+ .rt thead{display:none}
+ .rt tbody tr{display:block;margin:10px 12px;padding:6px 14px;border:1px solid #e2e8f0;border-radius:16px;background:#fff}
+ .rt tbody td{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:7px 0!important;text-align:right}
+ .rt tbody td::before{content:attr(data-l);color:#64748b;font-size:12px;font-weight:600;text-align:left}
+ .rt tbody td[colspan]{display:block;text-align:center}.rt tbody td[colspan]::before{content:none}
+ .rt tbody{display:block;padding-bottom:4px}
+}
+</style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-800">
 
@@ -54,10 +68,12 @@
 <!-- APP -->
 <div id="app" class="hidden">
   <div id="ov" class="fixed inset-0 z-30 hidden bg-slate-900/40 lg:hidden"></div>
+  <nav id="bnav" aria-label="Menu utama" class="fixed inset-x-4 z-30 mx-auto flex max-w-md items-end justify-around rounded-[28px] border border-slate-200 bg-white/95 px-2 shadow-2xl backdrop-blur lg:hidden"></nav>
+  <button id="bhandle" aria-label="Tampilkan menu" class="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex h-9 items-end justify-center pb-1.5 opacity-0 transition-opacity lg:hidden"><span class="h-1.5 w-24 rounded-full bg-slate-400/70"></span></button>
   <aside id="side" class="fixed inset-y-0 left-0 z-40 flex w-64 -translate-x-full flex-col border-r border-slate-200 bg-white transition-transform lg:translate-x-0">
     <div class="flex h-16 items-center gap-3 border-b border-slate-200 px-4">
       <div class="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-indigo-50">
-        <img src="logo-tk.png" alt="Logo" class="h-full w-full object-cover" onerror="this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-school text-indigo-600'}))">
+        <img src="logo-tk.png" alt="Logo" loading="lazy" class="h-full w-full object-cover" onerror="this.replaceWith(Object.assign(document.createElement('i'),{className:'fas fa-school text-indigo-600'}))">
       </div>
       <div class="leading-tight"><div class="font-bold">SIK TK Lestari</div><div class="text-xs text-slate-500">TK PKK Lestari</div></div>
     </div>
@@ -74,9 +90,10 @@
       <div class="ml-auto flex items-center gap-3">
         <div class="hidden text-right leading-tight sm:block"><div id="uname" class="text-sm font-semibold"></div><div id="urole" class="text-xs text-indigo-600"></div></div>
         <div id="uav" class="grid h-10 w-10 place-items-center rounded-xl bg-indigo-600 font-bold text-white"></div>
+        <button data-act="logout" class="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 text-rose-600 lg:hidden" aria-label="Keluar"><i class="fas fa-right-from-bracket"></i></button>
       </div>
     </header>
-    <main id="content" class="mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6"></main>
+    <main id="content" class="mx-auto w-full max-w-7xl flex-1 p-4 pb-28 sm:p-6 sm:pb-28 lg:pb-6"></main>
     <footer class="px-4 pb-5 pt-2 text-center text-xs text-slate-400 sm:px-6">&copy; <span class="yr"></span> - Developed by M. Daisak Syamaidzar</footer>
   </div>
 </div>
@@ -102,6 +119,27 @@ const T = Swal.mixin({toast:true, position:'top-end', showConfirmButton:false, t
 const toast = (m, ok = true) => T.fire({icon: ok ? 'success' : 'error', title: m});
 const warn = t => Swal.fire({icon:'warning', title:t, confirmButtonColor:'#4f46e5'});
 const ask = (title, text, btn = 'Ya, lanjutkan') => Swal.fire({title, text, icon:'question', showCancelButton:true, confirmButtonText:btn, cancelButtonText:'Batal', confirmButtonColor:'#4f46e5'}).then(r => r.isConfirmed);
+const RUN = {};
+const sk = (n = 3, h = 'h-28') => Array.from({length: n}, () => `<div class="animate-pulse rounded-2xl bg-slate-200/70 ${h}"></div>`).join('');
+function lazy(id, fn) {                         // muat bagian halaman hanya saat mendekati layar
+  const el = $(id); if (!el) return;
+  if (!('IntersectionObserver' in window)) return fn();
+  const o = new IntersectionObserver(es => { if (es[0].isIntersecting) { o.disconnect(); fn(); } }, {rootMargin: '200px'});
+  o.observe(el);
+}
+function labelRows(root) {                      // beri label kolom pada tiap sel (untuk tampilan kartu di mobile)
+  (root || document).querySelectorAll('table.rt').forEach(t => {
+    const h = [...t.querySelectorAll('thead th')].map(x => x.textContent);
+    t.querySelectorAll('tbody tr').forEach(tr => [...tr.children].forEach((td, i) => { if (h[i]) td.dataset.l = h[i]; }));
+  });
+}
+const WRITE = new Set(['simpanTransaksi', 'hapusTransaksi', 'simpanSetoran', 'terimaSetoran', 'tambahSiswaBaru', 'updatePengaturan', 'simpanPembayaranBendahara', 'simpanPengeluaran', 'tolakSetoran']);
+const uid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2);
+// Modal verifikasi berisi rincian aksi; fokus awal di tombol "Periksa lagi" agar tidak terkonfirmasi tanpa sengaja
+const konfirmasi = (title, rows, btn = 'Ya, lanjutkan', color = '#4f46e5') => Swal.fire({
+  title, icon:'question', showCancelButton:true, confirmButtonText:btn, cancelButtonText:'Periksa lagi', confirmButtonColor:color, reverseButtons:true, focusCancel:true,
+  html: `<div class="text-left text-sm">${rows.map(x => `<div class="flex justify-between gap-4 border-b border-slate-100 py-2"><span class="text-slate-500">${esc(x[0])}</span><b class="text-right">${esc(x[1])}</b></div>`).join('')}</div>`
+}).then(x => x.isConfirmed);
 async function work(fn, msg = 'Memproses...') {
   if (busy) return null;               // cegah klik ganda
   busy = true;
@@ -112,7 +150,7 @@ async function work(fn, msg = 'Memproses...') {
 async function api(action, payload = {}) {
   try {
     const r = await fetch(API_URL, {method:'POST', redirect:'follow', headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({action, payload, token: user && user.token})});
+      body: JSON.stringify({action, payload: WRITE.has(action) ? {...payload, reqId: uid()} : payload, token: user && user.token})});
     let j; try { j = await r.json(); } catch { return {success:false, message:'Respons server tidak valid.'}; }
     if (j.code === 'AUTH' && action !== 'login') forceLogout(j.message);
     return j;
@@ -127,10 +165,10 @@ const stat = (c, l, v, i, s = '') => `<div class="relative overflow-hidden round
   <div class="mt-1 text-xs opacity-90">${s}</div>
   <span class="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-xl bg-white/20"><i class="fas ${i}"></i></span></div>`;
 const head = (t, s) => `<div class="mb-5"><h1 class="text-2xl font-bold">${t}</h1><p class="text-sm text-slate-500">${s}</p></div>`;
-const tbl = (h, b) => `<div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-100"><thead><tr>${h.map(x => `<th class="th ${x[1] || ''}">${x[0]}</th>`).join('')}</tr></thead>
+const tbl = (h, b) => `<div class="overflow-x-auto"><table class="rt min-w-full divide-y divide-slate-100"><thead><tr>${h.map(x => `<th class="th ${x[1] || ''}">${x[0]}</th>`).join('')}</tr></thead>
   <tbody class="divide-y divide-slate-100">${b || `<tr><td colspan="${h.length}" class="td py-10 text-center text-slate-400">Belum ada data.</td></tr>`}</tbody></table></div>`;
-const view = h => { $('content').innerHTML = h; };
-const loading = () => view('<div class="py-20 text-center text-slate-400"><i class="fas fa-spinner fa-spin text-2xl"></i></div>');
+const view = h => { $('content').innerHTML = h; labelRows($('content')); };
+const loading = () => view(`<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">${sk(3)}</div><div class="mt-5 h-64 animate-pulse rounded-2xl bg-slate-200/70"></div>`);
 const field = (l, inner) => `<div><label class="lbl">${l}</label>${inner}</div>`;
 const money = (id, ph = '5.000') => `<input id="${id}" class="inp money text-base font-bold" inputmode="numeric" placeholder="${ph}">`;
 const bdg = (t, c) => `<span class="badge ${c}">${esc(t)}</span>`;
@@ -143,6 +181,7 @@ function fill(sel, q = '') {
   if (q && list.length === 1) { $(sel).value = list[0].nisn; $(sel).dispatchEvent(new Event('change', {bubbles:true})); }
 }
 async function loadSiswa(force) {            // cache 60 detik agar tidak memanggil server terus
+  if (force) rg.t = 0;
   if (!force && siswa.length && Date.now() - siswaAt < 60000) return;
   const r = await api('getDataSiswa');
   if (r.success) { siswa = r.data; siswaAt = Date.now(); } else toast(r.message, false);
@@ -151,7 +190,7 @@ const deb = fn => { clearTimeout(dt); dt = setTimeout(fn, 200); };
 
 // ---------- Menu & navigasi ----------
 const MENUS = {
-  guru: [['input','fa-piggy-bank','Input Tabungan'], ['riwayat','fa-clock-rotate-left','Riwayat Siswa'], ['setor','fa-paper-plane','Setor Kas']],
+  guru: [['beranda','fa-house','Beranda'], ['input','fa-piggy-bank','Input Tabungan'], ['riwayat','fa-clock-rotate-left','Riwayat Siswa'], ['setor','fa-paper-plane','Setor Kas']],
   bendahara: [['spp','fa-file-invoice-dollar','Pembayaran SPP'], ['kas','fa-book','Buku Kas SPP']],
   kepsek: [['rekap','fa-chart-pie','Rekap Tabungan'], ['verif','fa-clipboard-check','Verifikasi Setoran'], ['laporan','fa-clipboard-list','Laporan Setoran'], ['kas','fa-book','Buku Kas SPP']],
   admin: [['rekap','fa-chart-pie','Rekap Tabungan'], ['siswa','fa-user-graduate','Kelola Siswa'], ['keluar','fa-cart-shopping','Kas Keluar'], ['kas','fa-book','Buku Kas SPP'], ['atur','fa-gear','Pengaturan']]
@@ -164,6 +203,7 @@ function start() {
   const m = MENUS[role()] || [];
   $('nav').innerHTML = m.map(x => `<button data-go="${x[0]}" class="nav-i"><i class="fas ${x[1]} w-5 text-center"></i>${x[2]}</button>`).join('');
   api('getPengaturan').then(r => { if (r.success) settings = r.data; });
+  $('bnav').innerHTML = m.map(x => `<button data-go="${x[0]}" class="bn flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 pb-2 pt-2 text-[11px] font-semibold text-slate-500"><span class="bi grid h-10 w-10 place-items-center rounded-full"><i class="fas ${x[1]} text-lg"></i></span><span class="max-w-full truncate">${SH[x[0]] || x[2]}</span></button>`).join('');
   if (m.length) go(m[0][0]);
 }
 function go(id) {
@@ -174,8 +214,23 @@ function go(id) {
     const on = b.dataset.go === id;
     b.classList.toggle('bg-indigo-50', on); b.classList.toggle('text-indigo-600', on);
   });
-  loading(); PAGES[id]();
+  document.querySelectorAll('.bn').forEach(b => { const on = b.dataset.go === id; b.classList.toggle('text-indigo-600', on); b.classList.toggle('text-slate-500', !on); b.firstElementChild.classList.toggle('bi-on', on); });
+  showBar(); loading(); PAGES[id]();
 }
+const SH = {beranda:'Beranda', input:'Input', riwayat:'Riwayat', setor:'Setor', spp:'SPP', kas:'Kas SPP', rekap:'Rekap', verif:'Verifikasi', laporan:'Laporan', siswa:'Siswa', keluar:'Keluar', atur:'Atur'};
+let hideT;
+function showBar() {                            // tampil saat scroll/sentuh, otomatis sembunyi 3 detik setelah tidak ada aktivitas
+  $('bnav').classList.remove('bhide');
+  $('bhandle').classList.add('pointer-events-none', 'opacity-0');
+  clearTimeout(hideT); hideT = setTimeout(hideBar, 3000);
+}
+function hideBar() {
+  $('bnav').classList.add('bhide');
+  $('bhandle').classList.remove('pointer-events-none', 'opacity-0');
+}
+addEventListener('scroll', () => { if (user) showBar(); }, {passive: true, capture: true});
+addEventListener('touchstart', () => { if (user) showBar(); }, {passive: true});
+$('bhandle').addEventListener('click', showBar);
 function side(open) {
   $('side').classList.toggle('-translate-x-full', !open);
   $('ov').classList.toggle('hidden', !open);
@@ -209,11 +264,12 @@ const PAGES = {
     view(head('Setor kas', 'Serahkan uang tabungan ke Kepala Sekolah') + `<div class="mb-5 grid gap-5 md:grid-cols-2"><div id="kas"></div>
       <div class="card space-y-4 p-5">${field('Nominal setoran (Rp)', money('nom-setor', 'Jumlah yang disetor'))}
       <button data-act="setor" class="btn w-full bg-emerald-600 py-3 hover:bg-emerald-700"><i class="fas fa-paper-plane"></i>Kirim setoran</button></div></div>
-      <div class="card overflow-hidden"><div class="border-b border-slate-200 p-5 font-semibold">Saldo siswa kelas Anda</div><div id="rk"></div></div>`);
+      <div class="card overflow-hidden"><div class="border-b border-slate-200 p-5 font-semibold">Saldo siswa kelas Anda</div><div id="rk"></div></div>${blokRiwSetoran()}`);
     const [a] = await Promise.all([api('getInfoSetoranGuru'), loadSiswa()]);
     kasTangan = a.success ? a.kasTangan : 0;
     $('kas').innerHTML = stat(kasTangan < 0 ? 'orange' : 'green', 'Kas di tangan (belum disetor)', rp(kasTangan), 'fa-money-bill-wave', a.peringatan ? esc(a.peringatan) : '');
     pager('rk', [['NISN'], ['Nama'], ['Saldo', 'text-right']], siswa.map(s => `<tr><td class="td text-slate-500">${esc(s.nisn)}</td><td class="td font-semibold">${esc(s.nama)}</td><td class="td text-right font-bold ${s.saldo > 0 ? 'text-emerald-600' : 'text-slate-400'}">${rp(s.saldo)}</td></tr>`));
+    lazy('lz-riw', loadRiwSetoran);
   },
 
   // === BENDAHARA ===
@@ -266,7 +322,8 @@ const PAGES = {
       <div class="card overflow-hidden"><div class="border-b border-slate-200 p-5 font-semibold">Setoran menunggu persetujuan</div>
       ${tbl([['Waktu'], ['Guru / kelas'], ['Nominal'], ['Aksi', 'text-center']], (b.success ? b.data : []).map(d => `<tr><td class="td whitespace-nowrap text-xs text-slate-500">${tgl(d.tanggal)}</td>
         <td class="td"><b>${esc(d.guru)}</b><div class="text-xs text-slate-400">${esc(d.kelas)}</div></td><td class="td font-bold text-emerald-600">${rp(d.nominal)}</td>
-        <td class="td text-center"><button data-act="acc" data-id="${esc(d.id)}" class="btn bg-emerald-600 px-3 py-1.5 text-xs hover:bg-emerald-700"><i class="fas fa-check"></i>Terima</button></td></tr>`).join(''))}</div>`);
+        <td class="td text-center"><button data-act="acc" data-id="${esc(d.id)}" data-guru="${esc(d.guru)}" data-nom="${Number(d.nominal) || 0}" class="btn bg-emerald-600 px-3 py-1.5 text-xs hover:bg-emerald-700"><i class="fas fa-check"></i>Terima</button>
+        <button data-act="tolak" data-id="${esc(d.id)}" data-guru="${esc(d.guru)}" data-nom="${Number(d.nominal) || 0}" class="btn ml-1 bg-rose-500 px-3 py-1.5 text-xs hover:bg-rose-600"><i class="fas fa-xmark"></i>Tolak</button></td></tr>`).join(''))}</div>`);
   },
   async laporan() {
     const r = await api('getLaporanSetoran'); if (!fail(r)) return view('');
@@ -302,6 +359,31 @@ const PAGES = {
   }
 };
 PAGES.kasspp = PAGES.kas;
+let rg = {t: 0, d: null};
+const pct = r => r.arah === 'up' ? `<i class="fas fa-arrow-up"></i> ${r.persen}% dibanding ${esc(r.pembanding.label)}`
+  : r.arah === 'down' ? `<i class="fas fa-arrow-down"></i> ${Math.abs(r.persen)}% dibanding ${esc(r.pembanding.label)}`
+  : r.arah === 'same' ? `Sama dengan ${esc(r.pembanding.label)}` : r.arah === 'baru' ? '<i class="fas fa-arrow-up"></i> Belum ada pembanding' : 'Belum ada uang masuk';
+PAGES.beranda = async function () {
+  view(head('Beranda', esc(user.kelas || '') + ' • ' + new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'})) +
+    `<div id="stats" class="mb-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">${sk(3)}</div>${blokRiwSetoran()}`);
+  if (!rg.d || Date.now() - rg.t > 30000) { const x = await api('getRingkasanGuru'); if (!fail(x)) return; rg = {t: Date.now(), d: x}; }
+  if (!$('stats')) return;
+  const r = rg.d;
+  $('stats').innerHTML = stat('indigo', 'Total saldo aktif', rp(r.saldoAktif), 'fa-wallet', r.jumlahSiswa + ' siswa aktif')
+    + stat(r.belumDisetor < 0 ? 'orange' : 'cyan', 'Belum disetor', rp(r.belumDisetor), 'fa-hand-holding-dollar', 'Menunggu persetujuan: ' + rp(r.setoranPending))
+    + stat('green', 'Uang masuk hari ini', rp(r.masukHariIni), 'fa-arrow-trend-up', pct(r));
+  lazy('lz-riw', loadRiwSetoran);
+};
+const blokRiwSetoran = () => `<div id="lz-riw" class="card mt-5 overflow-hidden"><div class="border-b border-slate-200 p-5 font-semibold">Riwayat setoran saya</div><div id="riw-set" class="space-y-2 p-5">${sk(2, 'h-12')}</div></div>`;
+async function loadRiwSetoran() {
+  const x = await api('getRiwayatSetoranGuru'); if (!$('riw-set')) return;
+  if (!fail(x)) return $('riw-set').innerHTML = '<p class="py-6 text-center text-slate-400">Gagal memuat riwayat.</p>';
+  const c = {Pending:'bg-amber-100 text-amber-700', Disetujui:'bg-emerald-100 text-emerald-700', Ditolak:'bg-rose-100 text-rose-700'};
+  $('riw-set').className = '';
+  pager('riw-set', [['Waktu'], ['Nominal', 'text-right'], ['Status'], ['Keterangan']], x.data.map(d => `<tr><td class="td whitespace-nowrap text-xs text-slate-500">${tgl(d.tanggal)}</td>
+    <td class="td text-right font-bold">${rp(d.nominal)}</td><td class="td">${bdg(d.status, c[d.status] || 'bg-slate-100 text-slate-600')}</td>
+    <td class="td text-xs text-slate-500">${d.status === 'Ditolak' ? esc(d.alasan) : d.status === 'Disetujui' ? 'Diterima ' + tgl(d.tglProses) : 'Menunggu Kepala Sekolah'}</td></tr>`), 5);
+}
 
 const PG = {};
 function pager(id, h, rows, size) { PG[id] = {h, rows, size: size || 10, page: 1}; renderPg(id); }
@@ -318,7 +400,7 @@ function renderPg(id) {
     nav = `<div class="flex flex-col items-center justify-between gap-2 border-t border-slate-200 p-3 sm:flex-row sm:px-5"><span class="text-xs text-slate-500">Menampilkan ${a + 1}–${b} dari ${n}</span>
       <div class="flex flex-wrap items-center gap-1">${btn(s.page - 1, '‹', false, s.page === 1)}${mid}${btn(s.page + 1, '›', false, s.page === pages)}</div></div>`;
   }
-  $(id).innerHTML = tbl(s.h, s.rows.slice(a, b).join('')) + nav;
+  $(id).innerHTML = tbl(s.h, s.rows.slice(a, b).join('')) + nav; labelRows($(id));
 }
 function renderRekap(q) {
   q = q.toLowerCase();
@@ -368,7 +450,7 @@ const ACT = {
     const n = $('s-siswa').value, j = $('jenis').value, v = num('nom'), s = siswa.find(x => x.nisn === n);
     if (!s || v <= 0) return warn('Pilih siswa dan isi nominal.');
     if (j === 'Tarik' && v > s.saldo) return warn('Saldo tidak cukup. Saldo ' + s.nama + ': ' + rp(s.saldo));
-    if (!await ask(j === 'Nabung' ? 'Simpan tabungan?' : 'Proses penarikan?', s.nama + ': ' + rp(v))) return;
+    if (!await konfirmasi(j === 'Nabung' ? 'Konfirmasi tabungan' : 'Konfirmasi penarikan', [['Siswa', s.nama], ['Kelas', s.kelas], ['Jenis', j === 'Nabung' ? 'Menabung' : 'Penarikan'], ['Nominal', rp(v)], ['Saldo setelahnya', rp(j === 'Nabung' ? s.saldo + v : s.saldo - v)]], 'Ya, simpan', j === 'Nabung' ? '#4f46e5' : '#e11d48')) return;
     const r = await work(() => api('simpanTransaksi', {nisn:n, jenis:j, nominal:v})); if (!r) return;
     if (fail(r)) {
       toast(r.message); $('nom').value = ''; await loadSiswa(true);
@@ -379,40 +461,57 @@ const ACT = {
     const x = await Swal.fire({title:'Batalkan transaksi?', input:'text', inputLabel:'Alasan pembatalan', inputValue:'Salah input', showCancelButton:true, confirmButtonText:'Ya, batalkan', cancelButtonText:'Tutup', confirmButtonColor:'#ef4444'});
     if (!x.isConfirmed) return;
     const r = await work(() => api('hapusTransaksi', {idTransaksi:d.id, alasan:x.value})); if (!r) return;
-    if (fail(r)) { toast(r.message); siswaAt = 0; loadRiw(); }
+    if (fail(r)) { toast(r.message); siswaAt = 0; rg.t = 0; loadRiw(); }
   },
   async setor() {
     const v = num('nom-setor');
     if (v <= 0) return warn('Isi nominal setoran.');
     if (v > kasTangan) return warn('Nominal melebihi kas di tangan Anda (' + rp(kasTangan) + ').');
-    if (!await ask('Kirim setoran?', 'Setor ' + rp(v) + ' ke Kepala Sekolah.')) return;
+    if (!await konfirmasi('Periksa setoran Anda', [['Kas di tangan', rp(kasTangan)], ['Nominal disetor', rp(v)], ['Sisa setelah setor', rp(kasTangan - v)], ['Penerima', 'Kepala Sekolah']], 'Lanjut', '#16a34a')) return;
+    const x = await Swal.fire({
+      title:'Konfirmasi ulang nominal', icon:'warning', html:`Ketik ulang <b>${rp(v)}</b> untuk memastikan jumlah sudah benar dan uang sudah dihitung.`,
+      input:'text', inputAttributes:{inputmode:'numeric', autocomplete:'off'}, inputPlaceholder:'Ketik nominal setoran',
+      showCancelButton:true, confirmButtonText:'Kirim setoran', cancelButtonText:'Batal', confirmButtonColor:'#16a34a',
+      preConfirm: val => { if (Number(String(val).replace(/\D/g, '')) !== v) { Swal.showValidationMessage('Nominal tidak sama. Periksa kembali.'); return false; } return true; }
+    });
+    if (!x.isConfirmed) return;
     const r = await work(() => api('simpanSetoran', {nominal:v})); if (!r) return;
-    if (fail(r)) { toast(r.message); PAGES.setor(); }
+    if (fail(r)) { rg.t = 0; await Swal.fire({icon:'success', title:'Setoran terkirim', text:r.message, confirmButtonColor:'#4f46e5'}); PAGES.setor(); }
   },
   async spp() {
     const n = $('spp-siswa').value, b = $('spp-bln').value, nom = Number(settings.Nominal_SPP) || 0;
     if (!n || !b) return warn('Pilih siswa dan bulan.');
     if (nom <= 0) return warn('Nominal SPP belum diatur oleh Admin.');
     const s = siswa.find(x => x.nisn === n);
-    if (!await ask('Catat SPP?', `${s.nama} • ${b} • ${rp(nom)}`)) return;
+    if (!await konfirmasi('Konfirmasi pembayaran SPP', [['Siswa', s.nama], ['Kelas', s.kelas], ['Bulan', b], ['Nominal SPP', rp(nom)]], 'Ya, catat', '#f97316')) return;
     const r = await work(() => api('simpanPembayaranBendahara', {nisn:n, bulan:b, nominalSPP:nom, nominalRekreasi:0})); if (!r) return;
     if (fail(r)) toast(r.message);
   },
   async acc(d) {
-    if (!await ask('Terima setoran ini?', 'Pastikan uang fisik sudah Anda terima.', 'Ya, terima')) return;
+    if (!await konfirmasi('Terima setoran?', [['Guru', d.guru], ['Nominal', rp(d.nom)], ['Catatan', 'Pastikan uang fisik sudah diterima']], 'Ya, uang sudah diterima', '#059669')) return;
     const r = await work(() => api('terimaSetoran', {id:d.id})); if (!r) return;
+    if (fail(r)) { toast(r.message); PAGES.verif(); }
+  },
+  async tolak(d) {
+    const x = await Swal.fire({title:'Tolak setoran?', icon:'warning', html:`Setoran <b>${esc(d.guru)}</b> sebesar <b>${rp(d.nom)}</b> akan ditolak dan kas guru dikembalikan.`,
+      input:'text', inputLabel:'Alasan penolakan (wajib)', inputPlaceholder:'Contoh: nominal tidak sesuai uang fisik', showCancelButton:true,
+      confirmButtonText:'Ya, tolak', cancelButtonText:'Batal', confirmButtonColor:'#e11d48',
+      preConfirm: v => { if (!String(v).trim()) { Swal.showValidationMessage('Alasan wajib diisi.'); return false; } return String(v).trim(); }});
+    if (!x.isConfirmed) return;
+    const r = await work(() => api('tolakSetoran', {id:d.id, alasan:x.value})); if (!r) return;
     if (fail(r)) { toast(r.message); PAGES.verif(); }
   },
   async addSiswa() {
     const p = {nisn:$('a-nisn').value.trim(), nama:$('a-nama').value.trim(), kelas:$('a-kelas').value.trim()};
     if (!p.nisn || !p.nama || !p.kelas) return warn('Lengkapi semua data.');
+    if (!await konfirmasi('Tambah siswa baru?', [['NISN', p.nisn], ['Nama', p.nama], ['Kelas', p.kelas]], 'Ya, simpan')) return;
     const r = await work(() => api('tambahSiswaBaru', p)); if (!r) return;
     if (fail(r)) { toast(r.message); ['a-nisn', 'a-nama', 'a-kelas'].forEach(i => $(i).value = ''); }
   },
   async keluar() {
     const p = {sumber:$('o-sumber').value, keterangan:$('o-ket').value.trim(), nominal:num('o-nom')};
     if (!p.keterangan || p.nominal <= 0) return warn('Isi keperluan dan nominal.');
-    if (!await ask('Potong kas?', `${p.sumber}: ${rp(p.nominal)} untuk ${p.keterangan}`, 'Ya, potong')) return;
+    if (!await konfirmasi('Konfirmasi pengeluaran', [['Sumber dana', p.sumber], ['Keperluan', p.keterangan], ['Nominal', rp(p.nominal)]], 'Ya, potong kas', '#e11d48')) return;
     const r = await work(() => api('simpanPengeluaran', p)); if (!r) return;
     if (fail(r)) { toast(r.message); PAGES.keluar(); }
   },
@@ -421,6 +520,10 @@ const ACT = {
     if (spp !== (Number(settings.Nominal_SPP) || 0)) p.nominalSPP = spp;                 // hanya kirim yang berubah
     if (saldo !== (Number(settings.Saldo_Awal_Bendahara) || 0)) p.saldoAwal = saldo;
     if (!Object.keys(p).length) return warn('Tidak ada perubahan.');
+    const rows = [];
+    if (p.nominalSPP !== undefined) rows.push(['Nominal SPP', rp(settings.Nominal_SPP) + ' → ' + rp(p.nominalSPP)]);
+    if (p.saldoAwal !== undefined) rows.push(['Saldo awal Bendahara', rp(settings.Saldo_Awal_Bendahara) + ' → ' + rp(p.saldoAwal)]);
+    if (!await konfirmasi('Simpan pengaturan?', rows, 'Ya, simpan', '#1e293b')) return;
     const r = await work(() => api('updatePengaturan', p)); if (!r) return;
     if (fail(r)) { toast(r.message); PAGES.atur(); }
   }
@@ -430,7 +533,11 @@ const ACT = {
 document.addEventListener('click', e => {
   lastAct = Date.now();
   const g = e.target.closest('[data-go]'); if (g) return go(g.dataset.go);
-  const a = e.target.closest('[data-act]'); if (a && ACT[a.dataset.act]) ACT[a.dataset.act](a.dataset, a);
+  const a = e.target.closest('[data-act]'); if (!a || !ACT[a.dataset.act]) return;
+  const k = a.dataset.act;
+  if (RUN[k]) return;                                   // aksi yang sama masih berjalan / modal masih terbuka
+  RUN[k] = 1; a.disabled = true;
+  Promise.resolve(ACT[k](a.dataset, a)).finally(() => { RUN[k] = 0; a.disabled = false; });
 });
 $('ov').addEventListener('click', () => side(false));
 document.addEventListener('keydown', () => lastAct = Date.now());
